@@ -50,10 +50,10 @@ namespace octet{
         direction = n_direction;
 
         material* puppet_mat = (n_material == nullptr) ? (direction > 0 ? new material(vec4(1, 0, 0, 1)) : new material(vec4(0.5f, 0, 0.5f, 1))) : n_material;
-        mesh_box* puppet_box = new mesh_box(vec3(2, 4, 1));
+        mesh_box* puppet_box = new mesh_box(vec3(2, 4, 0.0001f));
         node = new scene_node();
         
-        node->translate(vec3(direction*-5.0f, 0, 0));
+        node->translate(vec3(direction*-5.0f, 0, 0.5f));
         position = -5 * direction;
 
         game_scene->add_child(node);
