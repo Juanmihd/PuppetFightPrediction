@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   octet::app::init_all(argc, argv);
 
   // our application.
-  octet::MiniFightAI app(argc, argv);
+  octet::PuppetFight::MiniFightAI app(argc, argv);
   app.init();
 
   // open windows

@@ -143,8 +143,8 @@ namespace octet {
 
       HINSTANCE instance = (HINSTANCE)GetModuleHandle(0);
       HBRUSH brush = (HBRUSH) GetStockObject(NULL_BRUSH);
-      HICON icon = LoadIcon(0, IDI_ASTERISK);
-      HCURSOR cursor = LoadCursor(0, IDC_ARROW);
+      HICON icon = LoadIcon(0, IDI_SHIELD);
+      HCURSOR cursor = LoadCursor(0, IDC_CROSS);
 
       static WNDCLASSW wndclass = {
         CS_HREDRAW | CS_VREDRAW, DefWindowProc, 0, 0, instance,
@@ -154,8 +154,8 @@ namespace octet {
 
       gl_context = 0;
      
-      window_handle = CreateWindowW(L"MyClass", L"octet",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 768, 768,
+      window_handle = CreateWindowW(L"MyClass", L"Mini fighting AI!",
+        WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME, CW_USEDEFAULT, CW_USEDEFAULT, 960, 540,
         NULL, NULL, wndclass.hInstance, (LPVOID)this
       );
 
