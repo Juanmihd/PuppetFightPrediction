@@ -60,7 +60,7 @@ namespace octet {
 
         player_one.init(app_scene);
         player_two.init(app_scene,-1);
-        time_lapse = 0.1f;
+        time_lapse = 0.3f;
         previous_action = std::chrono::system_clock::now();
         turn = 0;
       }
@@ -78,21 +78,61 @@ namespace octet {
       }
 
       void keyboard(){
-        if (is_key_down('A')){
-          if (player_one.get_position() >= -14)
-            player_one.input_action(MOVE_LEFT);
+        //Player 1
+        if (!player_one.is_finishing()){
+          if (is_key_down('A')){
+            if (player_one.get_position() >= -14)
+              player_one.input_action(MOVE_LEFT);
+          }
+          else if (is_key_down('D')){
+            if (!player_one.collision_with(player_two))
+              player_one.input_action(MOVE_RIGHT);
+            else
+              player_one.input_action(PUNCH_MID);
+          }
+          else if (is_key_down('E')){
+            player_one.input_action(PUNCH_UP);
+          }
+          else if (is_key_down('C')){
+            player_one.input_action(PUNCH_DOWN);
+          }
+          else if (is_key_down('W')){
+            player_one.input_action(BLOCK_UP);
+          }
+          else if (is_key_down('S')){
+            player_one.input_action(BLOCK_MID);
+          }
+          else if (is_key_down('X')){
+            player_one.input_action(BLOCK_DOWN);
+          }
         }
-        else if (is_key_down('D')){
-          if (!player_one.collision_with(player_two))
-            player_one.input_action(MOVE_RIGHT);
-        }
-        if (is_key_down(key_left)){
-          if (!player_two.collision_with(player_one))
-            player_two.input_action(MOVE_LEFT);
-        }
-        else if (is_key_down(key_right)){
-          if (player_two.get_position() <= 14)
-          player_two.input_action(MOVE_RIGHT);
+        //Player 2
+        if (!player_two.is_finishing()){
+          if (is_key_down('G')){
+            if (!player_two.collision_with(player_one))
+              player_two.input_action(MOVE_LEFT);
+            else
+              player_two.input_action(PUNCH_MID);
+          }
+          else if (is_key_down('J')){
+            if (player_two.get_position() <= 14)
+              player_two.input_action(MOVE_RIGHT);
+          }
+          else if (is_key_down('T')){
+            player_two.input_action(PUNCH_UP);
+          }
+          else if (is_key_down('B')){
+            player_two.input_action(PUNCH_DOWN);
+          }
+          else if (is_key_down('Y')){
+            player_two.input_action(BLOCK_UP);
+          }
+          else if (is_key_down('H')){
+            player_two.input_action(BLOCK_MID);
+          }
+          else if (is_key_down('N')){
+            player_two.input_action(BLOCK_DOWN);
+          }
         }
       }
 
@@ -119,8 +159,10 @@ namespace octet {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = now - previous_action;
         if (elapsed_seconds.count() > time_lapse){
-          player_one.execute_action(player_two);
-          player_two.execute_action(player_one);
+          if(player_one.execute_action(player_two))
+            stage_puppet.hurt_player_one();
+          if (player_two.execute_action(player_one))
+            stage_puppet.hurt_player_two();
           previous_action = now;
         }
 
