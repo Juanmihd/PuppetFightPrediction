@@ -214,6 +214,8 @@ namespace octet {
           //Memorize actions
           if (!(player_one.get_action() == NONE_ACTION && predictiveAI.get_last() == NONE_ACTION))
             predictiveAI.new_input(player_one.get_action());
+          //Predict actions
+          actions predicted_action = predictiveAI.predict();
           //Resolve actions
           if(player_one.execute_action(player_two))
             stage_puppet.hurt_player_one();

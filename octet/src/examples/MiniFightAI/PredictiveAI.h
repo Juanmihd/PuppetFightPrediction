@@ -53,7 +53,7 @@ class SequenceInput{
     }
 
     void print_sequence(){
-      for (int i = size - 1; i >= 0; --i){
+      for (int i = size - 1; i > 0; --i){
         //Obtain position in the array
         std::size_t pos = top - i;
         if (pos < 0) pos = _SIZE_SEQUENCE - pos;
@@ -97,7 +97,7 @@ public:
   std::size_t operator()(SequenceInput const& s) const{
     std::size_t hash_key = 0;
     std::size_t size_sequence = s.get_size();
-    for (int i = size_sequence-1; i >= 0; --i){
+    for (int i = size_sequence-1; i > 0; --i){
       //Obtain position in the array
       std::size_t pos = s.get_top() - 1 - i;
       if (pos < 0) pos = _SIZE_SEQUENCE + pos;
@@ -110,13 +110,25 @@ public:
 class PredictiveAI{
   std::size_t dimension_nGram;
   SequenceInput cur_sequence;
-  // The whole nGram representation is stored in a Hash table.
+  // The 1Gram is an array
+  std::array<int, 15> oneGram;
+  // The rest of the nGram representation is stored in a Hash table.
   std::unordered_map<SequenceInput, unsigned int, MyHash<SequenceInput>> nGram;
 
-public:
-  PredictiveAI() : dimension_nGram(1){}
+  void reset_n_gram(){
+    for (int i = 0; i < 15; ++i){
+      oneGram[i] = 0;
+    }
+  }
 
-  PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram){}
+public:
+  PredictiveAI() : dimension_nGram(1){
+    reset_n_gram();
+  }
+
+  PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram){
+    reset_n_gram();
+  }
 
   void init(std::size_t size){
     cur_sequence.set_size(4);
@@ -129,21 +141,29 @@ public:
   void new_input(std::size_t input){
     cur_sequence.new_input(input);
     int temp_size = cur_sequence.get_size();
-    cur_sequence.set_size(1);
-    if (cur_sequence.get_element(0) != 0){
+    //n-gram
+    for (int i = 2; i <= 4; ++i){
+      cur_sequence.set_size(i);
       auto search = nGram.find(cur_sequence);
       if (search == nGram.end()){
-        nGram[cur_sequence] = 0;
+        nGram[cur_sequence] = 1;
       }
       else{
         ++nGram[cur_sequence];
       }
     }
+    //1-gram
+    ++oneGram[input];
+
     cur_sequence.set_size(temp_size);
   }
 
   int get_last(){
     return cur_sequence.get_element(0);
+  }
+
+  int predict(){
+
   }
 
 };
