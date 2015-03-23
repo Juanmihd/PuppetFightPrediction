@@ -16,10 +16,12 @@
 
 namespace octet {
   namespace PuppetFight{
+    random random_gen;
     /// Scene containing a box with octet.
     class MiniFightAI : public app {
       StageUI stage_puppet;
       Puppet player_one;
+      bool player_two_AI;
       Puppet player_two;
 
       // scene for drawing box
@@ -41,10 +43,12 @@ namespace octet {
 
       /// this is called once OpenGL is initialized
       void app_init() {
+        random_gen.set_seed(time(NULL));
         app_scene =  new visual_scene();
 
         //---- THIS IS FOR AN UNIT TEST!!! ----
-        predictiveAI.init(3);
+        predictiveAI.init(4); 
+        player_two_AI = false;
 
         light_node = new scene_node();
         app_scene->add_child(light_node);
@@ -76,9 +80,13 @@ namespace octet {
         printf("TESTING!\n");
       }
 
-      void button_p_vs_p(){}
+      void button_p_vs_p(){
+        player_two_AI = false;
+      }
 
-      void button_p_vs_ai(){}
+      void button_p_vs_ai(){
+        player_two_AI = true;
+      }
 
       void button_ai_one(){}
 
@@ -211,11 +219,13 @@ namespace octet {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = now - previous_action;
         if (elapsed_seconds.count() > time_lapse){
-          //Memorize actions
-          if (!(player_one.get_action() == NONE_ACTION && predictiveAI.get_last() == NONE_ACTION))
-            predictiveAI.new_input(player_one.get_action());
           //Predict actions
-          actions predicted_action = predictiveAI.predict();
+          int predicted_action = predictiveAI.predict();
+          printf("Predicted action vs action => %i vs %i\n", predicted_action, player_one.get_action());
+          //Memorize actions
+          if (!(player_one.get_action() == NONE_ACTION && predictiveAI.get_last() == NONE_ACTION)
+              && player_one.get_action() < FINISHING)
+            predictiveAI.new_input(player_one.get_action());
           //Resolve actions
           if(player_one.execute_action(player_two))
             stage_puppet.hurt_player_one();
