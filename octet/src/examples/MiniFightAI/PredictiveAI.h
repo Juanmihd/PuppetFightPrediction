@@ -12,20 +12,54 @@
 #include <unordered_map>
 #include <array>
 
-enum {SIZE_SEQUENCE = 4, NUM_ACTIONS = 13};
+enum {_SIZE_SEQUENCE = 10, _NUM_ACTIONS = 13};
 
 class SequenceInput{
-  std::array<int, SIZE_SEQUENCE> sequence;
+  std::array<int, _SIZE_SEQUENCE> sequence;
   int top;
+  std::size_t size;
 
   public:
-    SequenceInput() : sequence( {{ -1, -1, -1, -1 }}), top(0) {}
-    SequenceInput(const std::array<int, 4>& n_sequence) : sequence(n_sequence), top(0) {}
+    SequenceInput() : top(0), size(_SIZE_SEQUENCE - 1) {}
+    SequenceInput(const std::array<int, _SIZE_SEQUENCE>& n_sequence) : sequence(n_sequence), top(0), size(_SIZE_SEQUENCE - 1) {}
     
     void new_input(int input){
       sequence[top] = input;
-      if (++top > SIZE_SEQUENCE)
+      if (++top >= _SIZE_SEQUENCE)
         top = 0;
+    }
+
+    void set_size(std::size_t n_size){
+      size = n_size;
+    }
+
+    std::size_t get_size() const{
+      return size;
+    }
+
+    std::size_t get_top() const{
+      return top;
+    }
+
+    int get_element(std::size_t pos) const{
+      return sequence[pos];
+    }
+
+    bool operator==(const SequenceInput& b){
+      if (size != b.size) return false;
+
+      std::size_t size_sequence = size;
+      bool equal = true;
+      for (int i = size_sequence - 1; equal && i >= 0; --i){
+        //Obtain position in the array
+        std::size_t pos_a = top - i;
+        std::size_t pos_b = b.top - i;
+        if (pos_a < 0) pos_a = _SIZE_SEQUENCE - pos_a;
+        if (pos_b < 0) pos_b = _SIZE_SEQUENCE - pos_b;
+        equal = sequence[pos_a] == b.sequence[pos_b];
+      }
+
+      return equal;
     }
 };
 
@@ -36,7 +70,15 @@ template <>
 class MyHash<SequenceInput>{
 public:
   std::size_t operator()(SequenceInput const& s) const{
-
+    std::size_t hash_key = 0;
+    std::size_t size_sequence = s.get_size();
+    for (int i = size_sequence-1; i >= 0; --i){
+      //Obtain position in the array
+      std::size_t pos = s.get_top() - i;
+      if (pos < 0) pos = _SIZE_SEQUENCE - pos;
+      hash_key = std::hash<int>()(hash_key) ^ (hash_key<<1);
+    }
+    return hash_key;
   }
 };
 

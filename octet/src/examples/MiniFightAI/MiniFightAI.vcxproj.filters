@@ -430,6 +430,7 @@
     <ClInclude Include="MiniFightAI.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="Puppet.h" />
+    <ClInclude Include="PredictiveAI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resources\mesh_builder.inl">
