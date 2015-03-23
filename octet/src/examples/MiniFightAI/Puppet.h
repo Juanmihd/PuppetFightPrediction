@@ -124,8 +124,9 @@ namespace octet{
           images.push_back(new image("assets/AI/Puppet2OuchMid01.gif"));
           images.push_back(new image("assets/AI/Puppet2OuchMid01Mask.gif"));
         }
+        param_shader* param = new param_shader("shaders/default.vs", "shaders/multitexture.fs");
         for (int i = 0; i < 11; ++i){
-          material* new_mat = new material(vec4(1, 1, 1, 1), new param_shader("shaders/default.vs", "shaders/multitexture.fs"));
+          material* new_mat = new material(vec4(1, 1, 1, 1), param);
           new_mat->add_sampler(0, app_utils::get_atom("top"), images[2*i], new sampler());
           new_mat->add_sampler(1, app_utils::get_atom("topmask"), images[2*i+1], new sampler());
           materials.push_back(new_mat);
@@ -259,6 +260,10 @@ namespace octet{
 
       bool is_finishing(){
         return next_action >= FINISHING;
+      }
+
+      actions get_action(){
+        return next_action;
       }
 
     };

@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <array>
 
-enum {_SIZE_SEQUENCE = 10, _NUM_ACTIONS = 13};
+enum {_SIZE_SEQUENCE = 10};
 
 class SequenceInput{
   std::array<int, _SIZE_SEQUENCE> sequence;
@@ -24,9 +24,9 @@ class SequenceInput{
     SequenceInput(const std::array<int, _SIZE_SEQUENCE>& n_sequence) : sequence(n_sequence), top(0), size(_SIZE_SEQUENCE - 1) {}
     
     void new_input(int input){
-      sequence[top] = input;
       if (++top >= _SIZE_SEQUENCE)
         top = 0;
+      sequence[top] = input;
     }
 
     void set_size(std::size_t n_size){
@@ -46,7 +46,9 @@ class SequenceInput{
     }
 
     int get_element(std::size_t pos) const{
-      return sequence[pos];
+      int n_pos = top - pos;
+      if (n_pos < 0) n_pos = _SIZE_SEQUENCE - n_pos;
+      return sequence[n_pos];
     }
 
     bool operator==(const SequenceInput& b){
@@ -64,6 +66,24 @@ class SequenceInput{
       }
 
       return equal;
+    }
+
+    void print_sequence(){
+      for (int i = size - 1; i >= 0; --i){
+        //Obtain position in the array
+        std::size_t pos = top - i;
+        if (pos < 0) pos = _SIZE_SEQUENCE - pos;
+        printf("%i ", sequence[pos]);
+      }
+      printf("\n");
+    }
+
+    void print_debug_all(){
+      printf("Sequence: top %i and size %i\n", top, size);
+      for (const int& i : sequence){
+        printf("%i ", i);
+      }
+      printf("\n");
     }
 };
 
@@ -90,7 +110,7 @@ class PredictiveAI{
   std::size_t dimension_nGram;
   SequenceInput cur_sequence;
   // The whole nGram representation is stored in a Hash table.
-  std::unordered_map<SequenceInput, unsigned int> nGram;
+  std::unordered_map<SequenceInput, unsigned int, MyHash<SequenceInput>> nGram;
 
 public:
   PredictiveAI() : dimension_nGram(1){}

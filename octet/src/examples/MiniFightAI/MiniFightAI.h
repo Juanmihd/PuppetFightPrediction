@@ -8,6 +8,7 @@
 
 #include "UI.h"
 #include "Puppet.h"
+#include "PredictiveAI.h"
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -28,6 +29,9 @@ namespace octet {
       int moving_light;
       std::chrono::time_point<std::chrono::system_clock> previous_action; 
 
+      //---- THIS IS FOR AN UNIT TEST!!! ----
+      SequenceInput inputs;
+
       float time_lapse;
       int turn;
     public:
@@ -38,6 +42,9 @@ namespace octet {
       /// this is called once OpenGL is initialized
       void app_init() {
         app_scene =  new visual_scene();
+
+        //---- THIS IS FOR AN UNIT TEST!!! ----
+        inputs.set_size(0);
 
         light_node = new scene_node();
         app_scene->add_child(light_node);
@@ -65,6 +72,20 @@ namespace octet {
         turn = 0;
       }
 
+      void reset_game(){
+        inputs.print_debug_all();
+      }
+
+      void button_p_vs_p(){}
+
+      void button_p_vs_ai(){}
+
+      void button_ai_one(){}
+
+      void button_ai_two(){}
+
+      void button_ai_three(){}
+
       void mouse(){
         if (is_key_going_down(key_lmb)){
           int x = 0; 
@@ -79,26 +100,26 @@ namespace octet {
             if (rx <= 0.5f){
               if (rx < 0.19f){
                 if (rx > 0.12f)
-                  printf("RESET\n");
+                  reset_game();
               }
               else if (rx < 0.35f){
                 if (rx > 0.236f && rx < 0.30f)
-                  printf("P vs P\n");
+                  button_p_vs_p();
               }
               else if (rx < 0.42f)
-                printf("P vs AI\n");
+                button_p_vs_ai();
             }
             else{
               if (rx > 0.81f){
                 if (rx < 0.88f)
-                  printf("AI three\n");
+                  button_ai_one();
               }
               else if (rx > 0.65f){
                 if (rx < 0.764f && rx > 0.7f)
-                  printf("AI two\n");
+                  button_ai_two();
               }
               else if (rx > 0.58f)
-                printf("AI one\n");
+                button_ai_three();
             }
             //printf("Pos mouse: x= %f, y= %f\n", 1.0f*x / vx, 1.0f*y / vy);
           }
@@ -109,14 +130,17 @@ namespace octet {
         //Player 1
         if (!player_one.is_finishing()){
           if (is_key_down('A')){
-            if (player_one.get_position() >= -14)
+            if (player_one.get_position() >= -14){
               player_one.input_action(MOVE_LEFT);
+            }
           }
           else if (is_key_down('D')){
-            if (!player_one.collision_with(player_two))
+            if (!player_one.collision_with(player_two)){
               player_one.input_action(MOVE_RIGHT);
-            else
+            }
+            else{
               player_one.input_action(PUNCH_MID);
+            }
           }
           else if (is_key_down('E')){
             player_one.input_action(PUNCH_UP);
@@ -187,10 +211,15 @@ namespace octet {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = now - previous_action;
         if (elapsed_seconds.count() > time_lapse){
+          //Memorize actions
+          if (!(player_one.get_action() == NONE_ACTION && inputs.get_element(0) == NONE_ACTION))
+            inputs.new_input(player_one.get_action());
+          //Resolve actions
           if(player_one.execute_action(player_two))
             stage_puppet.hurt_player_one();
-          if (player_two.execute_action(player_one))
+          if(player_two.execute_action(player_one))
             stage_puppet.hurt_player_two();
+          //Reset timer
           previous_action = now;
         }
 
