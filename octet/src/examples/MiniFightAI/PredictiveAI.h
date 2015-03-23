@@ -20,13 +20,13 @@ class SequenceInput{
   std::size_t size;
 
   public:
-    SequenceInput() : top(0), size(0) {}
+    SequenceInput() : top(0), size(1) {}
     SequenceInput(const std::array<int, _SIZE_SEQUENCE>& n_sequence) : sequence(n_sequence), top(0), size(_SIZE_SEQUENCE - 1) {}
     
     void new_input(int input){
-      if (++top >= _SIZE_SEQUENCE)
-        top = 0;
       sequence[top] = input;
+      if (++top > _SIZE_SEQUENCE-1)
+        top = 0;
     }
 
     void set_size(std::size_t n_size){
@@ -46,26 +46,10 @@ class SequenceInput{
     }
 
     int get_element(std::size_t pos) const{
-      int n_pos = top - pos;
-      if (n_pos < 0) n_pos = _SIZE_SEQUENCE - n_pos;
+      int n_pos = top - 1 - pos;
+      if (n_pos < 0) 
+        n_pos = _SIZE_SEQUENCE + n_pos;
       return sequence[n_pos];
-    }
-
-    bool operator==(const SequenceInput& b){
-      if (size != b.size) return false;
-
-      std::size_t size_sequence = size;
-      bool equal = true;
-      for (int i = size_sequence - 1; equal && i >= 0; --i){
-        //Obtain position in the array
-        std::size_t pos_a = top - i;
-        std::size_t pos_b = b.top - i;
-        if (pos_a < 0) pos_a = _SIZE_SEQUENCE - pos_a;
-        if (pos_b < 0) pos_b = _SIZE_SEQUENCE - pos_b;
-        equal = sequence[pos_a] == b.sequence[pos_b];
-      }
-
-      return equal;
     }
 
     void print_sequence(){
@@ -87,6 +71,23 @@ class SequenceInput{
     }
 };
 
+
+bool operator==(const SequenceInput& a, const SequenceInput& b){
+  if (a.get_size() != b.get_size()) return false;
+  
+  std::size_t size_sequence = a.get_size();
+  bool equal = true;
+  for (int i = 0; equal && i < size_sequence; ++i){
+    equal = a.get_element(i) == b.get_element(i);
+  }
+
+  return equal;
+}
+
+bool operator!=(const SequenceInput& a, const SequenceInput& b){
+  return !(a == b);
+}
+
 template <class T>
 class MyHash;
 
@@ -98,8 +99,8 @@ public:
     std::size_t size_sequence = s.get_size();
     for (int i = size_sequence-1; i >= 0; --i){
       //Obtain position in the array
-      std::size_t pos = s.get_top() - i;
-      if (pos < 0) pos = _SIZE_SEQUENCE - pos;
+      std::size_t pos = s.get_top() - 1 - i;
+      if (pos < 0) pos = _SIZE_SEQUENCE + pos;
       hash_key = std::hash<int>()(hash_key) ^ (hash_key<<1);
     }
     return hash_key;
@@ -117,9 +118,34 @@ public:
 
   PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram){}
 
-  void new_input(std::size_t input){
-    if (cur_sequence.get_size() < dimension_nGram)  cur_sequence.grow_sequence();
+  void init(std::size_t size){
+    cur_sequence.set_size(4);
+    cur_sequence.new_input(0);
+    cur_sequence.new_input(0);
+    cur_sequence.new_input(0);
+    cur_sequence.new_input(0);
   }
+
+  void new_input(std::size_t input){
+    cur_sequence.new_input(input);
+    int temp_size = cur_sequence.get_size();
+    cur_sequence.set_size(1);
+    if (cur_sequence.get_element(0) != 0){
+      auto search = nGram.find(cur_sequence);
+      if (search == nGram.end()){
+        nGram[cur_sequence] = 0;
+      }
+      else{
+        ++nGram[cur_sequence];
+      }
+    }
+    cur_sequence.set_size(temp_size);
+  }
+
+  int get_last(){
+    return cur_sequence.get_element(0);
+  }
+
 };
 
 

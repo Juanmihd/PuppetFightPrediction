@@ -30,7 +30,7 @@ namespace octet {
       std::chrono::time_point<std::chrono::system_clock> previous_action; 
 
       //---- THIS IS FOR AN UNIT TEST!!! ----
-      SequenceInput inputs;
+      PredictiveAI predictiveAI;
 
       float time_lapse;
       int turn;
@@ -44,7 +44,7 @@ namespace octet {
         app_scene =  new visual_scene();
 
         //---- THIS IS FOR AN UNIT TEST!!! ----
-        inputs.set_size(0);
+        predictiveAI.init(3);
 
         light_node = new scene_node();
         app_scene->add_child(light_node);
@@ -73,7 +73,7 @@ namespace octet {
       }
 
       void reset_game(){
-        inputs.print_debug_all();
+        printf("TESTING!\n");
       }
 
       void button_p_vs_p(){}
@@ -212,8 +212,8 @@ namespace octet {
         std::chrono::duration<float> elapsed_seconds = now - previous_action;
         if (elapsed_seconds.count() > time_lapse){
           //Memorize actions
-          if (!(player_one.get_action() == NONE_ACTION && inputs.get_element(0) == NONE_ACTION))
-            inputs.new_input(player_one.get_action());
+          if (!(player_one.get_action() == NONE_ACTION && predictiveAI.get_last() == NONE_ACTION))
+            predictiveAI.new_input(player_one.get_action());
           //Resolve actions
           if(player_one.execute_action(player_two))
             stage_puppet.hurt_player_one();
