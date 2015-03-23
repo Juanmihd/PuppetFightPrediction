@@ -73,7 +73,35 @@ namespace octet {
           int vx = 0;
           int vy = 0;
           get_viewport_size(vx, vy);
-          printf("Pos mouse: x= %f, y= %f\n", 1.0f*x/vx, 1.0f*y/vy);
+          float rx = 1.0f*x / vx;
+          float ry = 1.0f*y / vy;
+          if (ry >= 0.8f && ry <= 0.85f){
+            if (rx <= 0.5f){
+              if (rx < 0.19f){
+                if (rx > 0.12f)
+                  printf("RESET\n");
+              }
+              else if (rx < 0.35f){
+                if (rx > 0.236f && rx < 0.30f)
+                  printf("P vs P\n");
+              }
+              else if (rx < 0.42f)
+                printf("P vs AI\n");
+            }
+            else{
+              if (rx > 0.81f){
+                if (rx < 0.88f)
+                  printf("AI three\n");
+              }
+              else if (rx > 0.65f){
+                if (rx < 0.764f && rx > 0.7f)
+                  printf("AI two\n");
+              }
+              else if (rx > 0.58f)
+                printf("AI one\n");
+            }
+            //printf("Pos mouse: x= %f, y= %f\n", 1.0f*x / vx, 1.0f*y / vy);
+          }
         }
       }
 

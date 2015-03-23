@@ -20,7 +20,7 @@ class SequenceInput{
   std::size_t size;
 
   public:
-    SequenceInput() : top(0), size(_SIZE_SEQUENCE - 1) {}
+    SequenceInput() : top(0), size(0) {}
     SequenceInput(const std::array<int, _SIZE_SEQUENCE>& n_sequence) : sequence(n_sequence), top(0), size(_SIZE_SEQUENCE - 1) {}
     
     void new_input(int input){
@@ -35,6 +35,10 @@ class SequenceInput{
 
     std::size_t get_size() const{
       return size;
+    }
+
+    void grow_sequence(){
+      ++size;
     }
 
     std::size_t get_top() const{
@@ -84,6 +88,7 @@ public:
 
 class PredictiveAI{
   std::size_t dimension_nGram;
+  SequenceInput cur_sequence;
   // The whole nGram representation is stored in a Hash table.
   std::unordered_map<SequenceInput, unsigned int> nGram;
 
@@ -93,7 +98,7 @@ public:
   PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram){}
 
   void new_input(std::size_t input){
-
+    if (cur_sequence.get_size() < dimension_nGram)  cur_sequence.grow_sequence();
   }
 };
 
