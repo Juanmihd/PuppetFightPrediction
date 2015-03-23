@@ -10,19 +10,47 @@
 #define _PREDICTIVEAI_H_
 
 #include <unordered_map>
+#include <array>
+
+enum {SIZE_SEQUENCE = 4, NUM_ACTIONS = 13};
+
+class SequenceInput{
+  std::array<int, SIZE_SEQUENCE> sequence;
+  int top;
+
+  public:
+    SequenceInput() : sequence( {{ -1, -1, -1, -1 }}), top(0) {}
+    SequenceInput(const std::array<int, 4>& n_sequence) : sequence(n_sequence), top(0) {}
+    
+    void new_input(int input){
+      sequence[top] = input;
+      if (++top > SIZE_SEQUENCE)
+        top = 0;
+    }
+};
+
+template <class T>
+class MyHash;
+
+template <> 
+class MyHash<SequenceInput>{
+public:
+  std::size_t operator()(SequenceInput const& s) const{
+
+  }
+};
 
 class PredictiveAI{
-  unsigned int num_actions;
-  unsigned int dimension_nGram;
-  unsigned int cur_input;
-  std::unordered_map<unsigned int, unsigned int> nGram;
+  std::size_t dimension_nGram;
+  // The whole nGram representation is stored in a Hash table.
+  std::unordered_map<SequenceInput, unsigned int> nGram;
 
 public:
-  PredictiveAI() : num_actions(0) {}
+  PredictiveAI() : dimension_nGram(1){}
 
-  PredictiveAI(int n_num_actions, int n_dimension_nGram) : num_actions(n_num_actions), dimension_nGram(n_dimension_nGram){}
+  PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram){}
 
-  void new_input(unsigned int input){
+  void new_input(std::size_t input){
 
   }
 };
