@@ -10,8 +10,10 @@ namespace octet {
   namespace PuppetFight{
     class StageUI{
       ref<scene_node> bottom;
+      ref<scene_node> bottom_cover;
       ref<scene_node> background;
       ref<scene_node> top;
+      ref<scene_node> courtin;
       ref<scene_node> life_player_one;
       ref<scene_node> life_player_two;
       ref<material> red;
@@ -26,17 +28,46 @@ namespace octet {
 
         image* topimage = new image("assets/AI/top.gif");
         image* topmask = new image("assets/AI/topmask.gif");
+        image* courtinimage = new image("assets/AI/courtin.gif");
+        image* courtinmask = new image("assets/AI/courtinmask.gif");
         material* top_mat = new material(vec4(1, 1, 1, 1), new param_shader("shaders/default.vs", "shaders/multitexture.fs"));
+        material* courtin_mat = new material(vec4(1, 1, 1, 1), new param_shader("shaders/default.vs", "shaders/multitexture.fs"));
         top_mat->add_sampler(0, app_utils::get_atom("top"), topimage, new sampler());
         top_mat->add_sampler(1, app_utils::get_atom("topmask"), topmask, new sampler());
+        courtin_mat->add_sampler(0, app_utils::get_atom("top"), courtinimage, new sampler());
+        courtin_mat->add_sampler(1, app_utils::get_atom("topmask"), courtinmask, new sampler());
         material* bottom_mat = new material(new image("assets/AI/bottom.gif"));
-        material* background_mat = new material(new image("assets/AI/background_3.gif"));
+        material* bottom_cover_mat = new material(new image("assets/AI/bottom_cover.gif"));
+        material* background_mat = nullptr;
+        int random_background = random_gen.get(0,6);
+        switch (random_background){
+        case 0:
+          background_mat = new material(new image("assets/AI/background.gif"));
+          break;
+        case 1:
+          background_mat = new material(new image("assets/AI/background_2.gif"));
+          break;
+        case 2:
+          background_mat = new material(new image("assets/AI/background_3.gif"));
+          break;
+        case 3:
+          background_mat = new material(new image("assets/AI/background_4.gif"));
+          break;
+        case 4:
+          background_mat = new material(new image("assets/AI/background_5.gif"));
+          break;
+        default:
+          background_mat = new material(new image("assets/AI/background_6.gif"));
+          break;
+        }
         material* black = new material(vec4(0, 0, 0, 1));
         red = new material(vec4(1, 0, 0, 1));
         purple = new material(vec4(.5f, 0, .5f, 1));
 
         mesh_box* bottom_box = new mesh_box(vec3(22, 8, 0.02));
+        mesh_box* bottom_cover_box = new mesh_box(vec3(22, 8, 0.02));
         mesh_box* top_box = new mesh_box(vec3(22, 8.5f, 0.05));
+        mesh_box* courtin_box = new mesh_box(vec3(20, 8.5f, 0.03));
         mesh_box* background_box = new mesh_box(vec3(20, 8.5, 1));
         mesh_box* life_one_box = new mesh_box(vec3(9, 1, 0.1));
         mesh_box* life_two_box = new mesh_box(vec3(9, 1, 0.1));
@@ -44,11 +75,15 @@ namespace octet {
         mesh_box* life_two_box_back = new mesh_box(vec3(9.15f, 1.1f, 0.1f));
 
         bottom = new scene_node();
-        bottom->translate(vec3(0,-10,1));
+        bottom->translate(vec3(0, -10, 1));
+        bottom_cover = new scene_node();
+        bottom_cover->translate(vec3(0, -10, 2));
         background = new scene_node();
         background->translate(vec3(0, 6, -1));
         top = new scene_node();
         top->translate(vec3(0, 6, 0));
+        courtin = new scene_node();
+        courtin->translate(vec3(0, 6, 0));
         life_player_one = new scene_node();
         life_player_one->translate(vec3(-11, -6, 1.2f));
         life_player_two = new scene_node();
@@ -57,7 +92,9 @@ namespace octet {
         life_one_node_back->translate(vec3(-11.1f, -6, 1));
         scene_node* life_two_node_back = new scene_node();
         life_two_node_back->translate(vec3(11.1f, -6, 1));
-        
+
+        game_scene->add_child(courtin);
+        game_scene->add_child(bottom_cover);
         game_scene->add_child(bottom);
         game_scene->add_child(background);
         game_scene->add_child(top);
@@ -66,6 +103,8 @@ namespace octet {
         game_scene->add_child(life_one_node_back);
         game_scene->add_child(life_two_node_back);
 
+        game_scene->add_mesh_instance(new mesh_instance(bottom_cover, bottom_cover_box, bottom_cover_mat));
+        game_scene->add_mesh_instance(new mesh_instance(courtin, courtin_box, courtin_mat));
         game_scene->add_mesh_instance(new mesh_instance(bottom, bottom_box, bottom_mat));
         game_scene->add_mesh_instance(new mesh_instance(background, background_box, background_mat));
         game_scene->add_mesh_instance(new mesh_instance(top, top_box, top_mat));
@@ -73,6 +112,14 @@ namespace octet {
         game_scene->add_mesh_instance(new mesh_instance(life_player_two, life_two_box, red));
         game_scene->add_mesh_instance(new mesh_instance(life_one_node_back, life_one_box_back, black));
         game_scene->add_mesh_instance(new mesh_instance(life_two_node_back, life_two_box_back, black));
+      }
+
+      void animate_intro(float t){
+        courtin->access_nodeToParent().loadIdentity();
+        courtin->translate(vec3(0, 6*(1-t) + 20*t, 0));
+
+        bottom_cover->access_nodeToParent().loadIdentity();
+        bottom_cover->translate(vec3(0, -10, 2*(1-t) + -3*t));
       }
 
       void update_lifes(int life1, int life2){

@@ -148,13 +148,19 @@ namespace octet{
         node = new scene_node();
         reset_puppet();
 
-        node->translate(vec3(direction*-5.0f, 2, -199.9f));
+        //node->translate(vec3(direction*-5.0f, 2, -199.9f));
+        node->translate(vec3(direction*-5.0f, -8, -199.9f));
         position = -5 * direction;
 
         game_scene->add_child(node);
         puppet_instance = new mesh_instance(node, puppet_box, materials[0]);
         game_scene->add_mesh_instance(puppet_instance);
 
+      }
+
+      void animate_intro(float t){
+        node->access_nodeToParent().loadIdentity();
+        node->translate(vec3(direction*-5.0f, -8*(1-t) + 2*t, -199.9f));
       }
 
       void reset_puppet(){

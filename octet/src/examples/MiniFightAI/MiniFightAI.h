@@ -6,8 +6,8 @@
 // Player 1 has to be a player always!
 //
 
-#include "UI.h"
 #include "Puppet.h"
+#include "UI.h"
 #include "PredictiveAI.h"
 #include <chrono>
 #include <ctime>
@@ -18,7 +18,7 @@ namespace octet {
   namespace PuppetFight{
     /// Scene containing a box with octet.
     class MiniFightAI : public app {
-      enum GameState { _INTRO = 0, _PLAYING = 1, _GAME_OVER = 2 } _game_state;
+      enum GameState { _INTRO = -1, _INTRO_ANIMATION = 0, _PLAYING = 1, _GAME_OVER = 2 } _game_state;
 
       StageUI stage_puppet;
       Puppet player_one;
@@ -28,14 +28,12 @@ namespace octet {
 
       // scene for drawing box
       ref<visual_scene> app_scene;
-      ref<scene_node> light_node;
-      int direction_light;
-      int moving_light;
       std::chrono::time_point<std::chrono::system_clock> previous_action; 
 
       PredictiveAI predictiveAI;
 
-
+      std::chrono::time_point<std::chrono::system_clock> cur_animation;
+      float time_animation;
       float time_lapse;
       float half_time_lapse;
 
@@ -46,37 +44,24 @@ namespace octet {
 
       /// this is called once OpenGL is initialized
       void app_init() {
-        random_gen.set_seed(time(NULL));
+        //Set really random seed
+        unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+        random_gen.set_seed(seed);
         app_scene =  new visual_scene();
 
-        //---- THIS IS FOR AN UNIT TEST!!! ----
         predictiveAI.init(4); 
         player_two_AI = false;
         type_AI = 1;
 
-        light_node = new scene_node();
-        app_scene->add_child(light_node);
-        light *_light = new light();
-        light_instance *li = new light_instance();
-        light_node->access_nodeToParent().translate(100, 100, 100);
-        light_node->access_nodeToParent().rotateX(25);
-        light_node->access_nodeToParent().rotateY(45);
-        _light->set_color(vec4(1, 1, 1, 1));
-        _light->set_kind(atom_directional);
-        li->set_node(light_node);
-        li->set_light(_light);
-        app_scene->add_light_instance(li);
-
         app_scene->create_default_camera_and_lights();
 
-        direction_light = -1;
-        moving_light = 1000;
         stage_puppet.init(app_scene);
 
         player_one.init(app_scene);
         player_two.init(app_scene,-1);
         time_lapse = 0.3f;
         half_time_lapse = time_lapse * 0.5f;
+        time_animation = 1.0f;
         previous_action = std::chrono::system_clock::now();
         _game_state = _INTRO;
       }
@@ -109,40 +94,46 @@ namespace octet {
 
       void mouse(){
         if (is_key_going_down(key_lmb)){
-          int x = 0; 
-          int y = 0;
-          get_mouse_pos(x, y); 
-          int vx = 0;
-          int vy = 0;
-          get_viewport_size(vx, vy);
-          float rx = 1.0f*x / vx;
-          float ry = 1.0f*y / vy;
-          if (ry >= 0.8f && ry <= 0.85f){
-            if (rx <= 0.5f){
-              if (rx < 0.19f){
-                if (rx > 0.12f)
-                  reset_game();
+          if (_game_state == _INTRO){
+            _game_state = _INTRO_ANIMATION;
+            cur_animation = std::chrono::system_clock::now();
+          }
+          else{
+            int x = 0;
+            int y = 0;
+            get_mouse_pos(x, y);
+            int vx = 0;
+            int vy = 0;
+            get_viewport_size(vx, vy);
+            float rx = 1.0f*x / vx;
+            float ry = 1.0f*y / vy;
+            if (ry >= 0.8f && ry <= 0.85f){
+              if (rx <= 0.5f){
+                if (rx < 0.19f){
+                  if (rx > 0.12f)
+                    reset_game();
+                }
+                else if (rx < 0.35f){
+                  if (rx > 0.236f && rx < 0.30f)
+                    button_p_vs_p();
+                }
+                else if (rx < 0.42f)
+                  button_p_vs_ai();
               }
-              else if (rx < 0.35f){
-                if (rx > 0.236f && rx < 0.30f)
-                  button_p_vs_p();
+              else{
+                if (rx > 0.81f){
+                  if (rx < 0.88f)
+                    button_ai_one();
+                }
+                else if (rx > 0.65f){
+                  if (rx < 0.764f && rx > 0.7f)
+                    button_ai_two();
+                }
+                else if (rx > 0.58f)
+                  button_ai_three();
               }
-              else if (rx < 0.42f)
-                button_p_vs_ai();
+              //printf("Pos mouse: x= %f, y= %f\n", 1.0f*x / vx, 1.0f*y / vy);
             }
-            else{
-              if (rx > 0.81f){
-                if (rx < 0.88f)
-                  button_ai_one();
-              }
-              else if (rx > 0.65f){
-                if (rx < 0.764f && rx > 0.7f)
-                  button_ai_two();
-              }
-              else if (rx > 0.58f)
-                button_ai_three();
-            }
-            //printf("Pos mouse: x= %f, y= %f\n", 1.0f*x / vx, 1.0f*y / vy);
           }
         }
       }
@@ -209,12 +200,44 @@ namespace octet {
         }
       }
 
-      void moveLight(){
-        --moving_light;
-        light_node->rotate(direction_light, vec3(1, 0, 0));
-        if (moving_light < 0){
-          direction_light = -direction_light;
-          moving_light = 1000;
+      void mid_frame(){
+        if (_game_state == _PLAYING){
+          //Predict actions
+          int predicted_action = predictiveAI.predict();
+          printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
+          //Decide action
+          if (player_two_AI)
+            switch (type_AI){
+            case 1:
+              player_two.AI_reaction_mimic((actions)predicted_action, player_one);
+              break;
+            case 2:
+              player_two.AI_reaction_defense((actions)predicted_action, player_one);
+              break;
+            case 3:
+              player_two.AI_reaction_balanced((actions)predicted_action, player_one);
+              break;
+          }
+        }
+      }
+
+      void last_frame(){
+        //Memorize actions
+        if (player_one.get_action() != NONE_ACTION && player_one.get_action() < FINISHING)
+          predictiveAI.new_input(player_one.get_action());
+        //Resolve actions
+        if (player_one.execute_action(player_two)){
+          stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
+        }
+        if (player_two.execute_action(player_one)){
+          stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
+        }
+        //Check if somebody won!
+        if (player_one.get_life() <= 0){
+          //Player two won!
+        }
+        else if (player_two.get_life() <= 0){
+          //Player two won!
         }
       }
 
@@ -227,52 +250,39 @@ namespace octet {
         mouse();
         if (_game_state == _PLAYING)
           keyboard();
-        //moveLight();
-
-        // execute actions in players
+        else if (_game_state == _INTRO_ANIMATION){
+          //Prepare to check frames
+          std::chrono::time_point<std::chrono::system_clock> now_animation = std::chrono::system_clock::now();
+          std::chrono::duration<float> elapsed_seconds = now_animation - cur_animation;
+          float t = 1.0f * elapsed_seconds.count() / time_animation;
+          if (t <= 1){
+            player_one.animate_intro(t);
+            player_two.animate_intro(t);
+            stage_puppet.animate_intro(t);
+          }
+          else{
+            player_one.animate_intro(1.0f);
+            player_two.animate_intro(1.0f);
+            stage_puppet.animate_intro(1.0f);
+            _game_state = _PLAYING;
+          }
+        }
+        //Prepare to check frames
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = now - previous_action;
+
+        // Mid frame (small animation + prediction)
         if (elapsed_seconds.count() > half_time_lapse){
-          if (_game_state == _PLAYING){
-            //Predict actions
-            int predicted_action = predictiveAI.predict();
-            printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
-            //Decide action
-            if (player_two_AI)
-              switch (type_AI){
-              case 1:
-                player_two.AI_reaction_mimic((actions)predicted_action, player_one);
-                break;
-              case 2:
-                player_two.AI_reaction_defense((actions)predicted_action, player_one);
-                break;
-              case 3:
-                player_two.AI_reaction_balanced((actions)predicted_action, player_one);
-                break;
-            }
-          }
+          //Run mid_frame
+          mid_frame();
           //Stop checking half_time_lapse
           half_time_lapse = time_lapse * 2.0f;
         }
 
+        // last frame (finish animation + execute actions!)
         if (elapsed_seconds.count() > time_lapse){
-          //Memorize actions
-          if (player_one.get_action() != NONE_ACTION && player_one.get_action() < FINISHING)
-            predictiveAI.new_input(player_one.get_action());
-          //Resolve actions
-          if (player_one.execute_action(player_two)){
-            stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
-          }
-          if (player_two.execute_action(player_one)){
-            stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
-          }
-          //Check if somebody won!
-          if (player_one.get_life() <= 0){
-            //Player two won!
-          }
-          else if (player_two.get_life() <= 0){
-            //Player two won!
-          }
+          //Run last_frame
+          last_frame();
           //Reset timer
           previous_action = now;
           half_time_lapse = time_lapse * 0.5f;
