@@ -75,18 +75,26 @@ namespace octet {
         game_scene->add_mesh_instance(new mesh_instance(life_two_node_back, life_two_box_back, black));
       }
 
-      void hurt_player_one(){
-        life_player_one->scale(vec3(0.9, 1, 1));
-        life_player_one->translate(vec3(-1, 0, 0));
+      void update_lifes(int life1, int life2){
+        life_player_one->access_nodeToParent().loadIdentity();
+        life_player_one->translate(vec3(-11, -6, 1.2f));
+        life_player_one->translate(vec3(-9, 0, 0));
+        life_player_one->scale(vec3(life1 / 100.0f, 1, 1));
+        life_player_one->translate(vec3(9, 0, 0));
+
+        life_player_two->access_nodeToParent().loadIdentity();
+        life_player_two->translate(vec3(11, -6, 1.2f));
+        life_player_two->translate(vec3(9, 0, 0));
+        life_player_two->scale(vec3(life2 / 100.0f, 1, 1));
+        life_player_two->translate(vec3(-9, 0, 0));
       }
 
-      void hurt_player_two(){
-        life_player_two->scale(vec3(0.9, 1, 1));
-        life_player_two->translate(vec3(1, 0, 0));
-      }
+      void reset_UI(){
+        life_player_one->access_nodeToParent().loadIdentity();
+        life_player_one->translate(vec3(-11, -6, 1.2f));
 
-      void display_lifes(int life1, int life2){
-
+        life_player_two->access_nodeToParent().loadIdentity();
+        life_player_two->translate(vec3(11, -6, 1.2f));
       }
     };
   }

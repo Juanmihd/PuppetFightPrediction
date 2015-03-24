@@ -18,6 +18,8 @@ namespace octet {
   namespace PuppetFight{
     /// Scene containing a box with octet.
     class MiniFightAI : public app {
+      enum GameState { _INTRO = 0, _PLAYING = 1, _GAME_OVER = 2 } _game_state;
+
       StageUI stage_puppet;
       Puppet player_one;
       bool player_two_AI;
@@ -31,11 +33,12 @@ namespace octet {
       int moving_light;
       std::chrono::time_point<std::chrono::system_clock> previous_action; 
 
-      //---- THIS IS FOR AN UNIT TEST!!! ----
       PredictiveAI predictiveAI;
 
+
       float time_lapse;
-      int turn;
+      float half_time_lapse;
+
     public:
       /// this is called when we construct the class before everything is initialised.
       MiniFightAI(int argc, char **argv) : app(argc, argv) {
@@ -73,14 +76,15 @@ namespace octet {
         player_one.init(app_scene);
         player_two.init(app_scene,-1);
         time_lapse = 0.3f;
+        half_time_lapse = time_lapse * 0.5f;
         previous_action = std::chrono::system_clock::now();
-        turn = 0;
+        _game_state = _INTRO;
       }
 
       void reset_game(){
-        printf("TESTING!\n");
         player_one.reset_puppet();
         player_two.reset_puppet();
+        stage_puppet.reset_UI();
       }
 
       void button_p_vs_p(){
@@ -221,39 +225,57 @@ namespace octet {
         app_scene->begin_render(vx, vy);
         // obtain input from mouse and keyboard
         mouse();
-        keyboard();
+        if (_game_state == _PLAYING)
+          keyboard();
         //moveLight();
 
         // execute actions in players
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<float> elapsed_seconds = now - previous_action;
-        if (elapsed_seconds.count() > time_lapse){
-          //Predict actions
-          int predicted_action = predictiveAI.predict();
-          printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
-          //Decide action
-          if (player_two_AI)
-            switch (type_AI){
-            case 1:
-              player_two.AI_reaction_mimic((actions)predicted_action, player_one);
-              break;
-            case 2:
-              player_two.AI_reaction_defense((actions)predicted_action, player_one);
-              break;
-            case 3:
-              player_two.AI_reaction_balanced((actions)predicted_action, player_one);
-              break;
+        if (elapsed_seconds.count() > half_time_lapse){
+          if (_game_state == _PLAYING){
+            //Predict actions
+            int predicted_action = predictiveAI.predict();
+            printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
+            //Decide action
+            if (player_two_AI)
+              switch (type_AI){
+              case 1:
+                player_two.AI_reaction_mimic((actions)predicted_action, player_one);
+                break;
+              case 2:
+                player_two.AI_reaction_defense((actions)predicted_action, player_one);
+                break;
+              case 3:
+                player_two.AI_reaction_balanced((actions)predicted_action, player_one);
+                break;
+            }
           }
+          //Stop checking half_time_lapse
+          half_time_lapse = time_lapse * 2.0f;
+        }
+
+        if (elapsed_seconds.count() > time_lapse){
           //Memorize actions
           if (player_one.get_action() != NONE_ACTION && player_one.get_action() < FINISHING)
             predictiveAI.new_input(player_one.get_action());
           //Resolve actions
-          if(player_one.execute_action(player_two))
-            stage_puppet.hurt_player_one();
-          if(player_two.execute_action(player_one))
-            stage_puppet.hurt_player_two();
+          if (player_one.execute_action(player_two)){
+            stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
+          }
+          if (player_two.execute_action(player_one)){
+            stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
+          }
+          //Check if somebody won!
+          if (player_one.get_life() <= 0){
+            //Player two won!
+          }
+          else if (player_two.get_life() <= 0){
+            //Player two won!
+          }
           //Reset timer
           previous_action = now;
+          half_time_lapse = time_lapse * 0.5f;
         }
 
         // update matrices. assume 30 fps.

@@ -146,7 +146,6 @@ namespace octet{
         reset_n_gram();
       }
 
-
       void init(std::size_t size){
         cur_sequence.set_size(4);
         cur_sequence.new_input(0);
@@ -155,6 +154,17 @@ namespace octet{
         cur_sequence.new_input(0);
       }
 
+      void resetAI(){
+        for (int i = 0; i < oneGram.size(); ++i){
+          oneGram[i] = 0;
+        }
+        nGram.clear();
+        nGram_sums.clear();
+        cur_sequence.new_input(0);
+        cur_sequence.new_input(0);
+        cur_sequence.new_input(0);
+        cur_sequence.new_input(0);
+      }
 
       void new_input(std::size_t input){
         int temp_size = cur_sequence.get_size();
