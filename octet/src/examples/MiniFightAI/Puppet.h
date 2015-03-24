@@ -7,6 +7,7 @@
 
 namespace octet{
   namespace PuppetFight{
+    random random_gen;
     enum height{
       HEIGHT_UP = 0, HEIGHT_MID = 1, HEIGHT_DOWN = 2
     };
@@ -166,6 +167,126 @@ namespace octet{
       
       void input_action(actions n_action){
         next_action = n_action;
+      }
+
+      void AI_reaction_balanced(actions n_action, Puppet& player){
+        int random = random_gen.get(0, 10);
+        if (next_action < FINISHING)
+          switch (n_action){
+          case MOVE_LEFT:
+            if (random < 5)
+              if (!collision_with(player))
+                next_action = MOVE_LEFT;
+              else
+                next_action = PUNCH_MID;
+            else
+              if (position <= 14)
+                next_action = MOVE_RIGHT;
+            break;
+          case MOVE_RIGHT:
+            if (random < 5)
+              if (!collision_with(player))
+                next_action = MOVE_LEFT;
+              else
+                next_action = PUNCH_MID;
+            else
+              next_action = PUNCH_MID;
+            break;
+          case PUNCH_UP:
+            if (random < 9)
+              next_action = BLOCK_UP;
+            else
+              next_action = PUNCH_MID;
+            break;
+          case PUNCH_MID:
+            if (random < 9)
+              next_action = BLOCK_MID;
+            else
+              next_action = PUNCH_DOWN;
+            break;
+          case PUNCH_DOWN:
+            if (random < 9)
+              next_action = BLOCK_DOWN;
+            else
+              next_action = PUNCH_UP;
+            break;
+          case BLOCK_UP:
+            next_action = PUNCH_DOWN;
+            break;
+          case BLOCK_MID:
+            next_action = PUNCH_UP;
+            break;
+          case BLOCK_DOWN:
+            next_action = PUNCH_MID;
+            break;
+        }
+      }
+
+      void AI_reaction_defense(actions n_action, Puppet& player){
+        int random = random_gen.get(0, 10);
+        if (next_action < FINISHING)
+          switch (n_action){
+          case MOVE_LEFT:
+            if (position <= 14 && random < 2)
+              next_action = MOVE_RIGHT;
+            break;
+          case MOVE_RIGHT:
+            if (position <= 14 && random < 2)
+              next_action = MOVE_RIGHT;
+            break;
+          case PUNCH_UP:
+            next_action = BLOCK_UP;
+            break;
+          case PUNCH_MID:
+            next_action = BLOCK_MID;
+            break;
+          case PUNCH_DOWN:
+            next_action = BLOCK_DOWN;
+            break;
+          case BLOCK_UP:
+            next_action = BLOCK_UP;
+            break;
+          case BLOCK_MID:
+            next_action = BLOCK_MID;
+            break;
+          case BLOCK_DOWN:
+            next_action = BLOCK_DOWN;
+            break;
+        }
+      }
+
+      void AI_reaction_mimic(actions n_action, Puppet& player){
+        if (next_action < FINISHING)
+          switch (n_action){
+          case MOVE_LEFT:
+            if (position <= 14)
+              next_action = MOVE_RIGHT;
+            break;
+          case MOVE_RIGHT:
+            if (!collision_with(player))
+              next_action = MOVE_LEFT;
+            else
+              next_action = PUNCH_MID;
+            break;
+          case PUNCH_UP:
+            next_action = PUNCH_UP;
+            break;
+          case PUNCH_MID:
+            next_action = PUNCH_MID;
+            break;
+          case PUNCH_DOWN:
+            next_action = PUNCH_DOWN;
+            break;
+          case BLOCK_UP:
+            next_action = BLOCK_UP;
+            break;
+          case BLOCK_MID:
+            next_action = BLOCK_MID;
+            break;
+          case BLOCK_DOWN:
+            next_action = BLOCK_DOWN;
+            break;
+        }
       }
 
       bool execute_action(Puppet& enemy){

@@ -84,6 +84,10 @@ namespace octet {
         life_player_two->scale(vec3(0.9, 1, 1));
         life_player_two->translate(vec3(1, 0, 0));
       }
+
+      void display_lifes(int life1, int life2){
+
+      }
     };
   }
 }

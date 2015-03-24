@@ -16,12 +16,12 @@
 
 namespace octet {
   namespace PuppetFight{
-    random random_gen;
     /// Scene containing a box with octet.
     class MiniFightAI : public app {
       StageUI stage_puppet;
       Puppet player_one;
       bool player_two_AI;
+      int type_AI;
       Puppet player_two;
 
       // scene for drawing box
@@ -49,6 +49,7 @@ namespace octet {
         //---- THIS IS FOR AN UNIT TEST!!! ----
         predictiveAI.init(4); 
         player_two_AI = false;
+        type_AI = 1;
 
         light_node = new scene_node();
         app_scene->add_child(light_node);
@@ -78,6 +79,8 @@ namespace octet {
 
       void reset_game(){
         printf("TESTING!\n");
+        player_one.reset_puppet();
+        player_two.reset_puppet();
       }
 
       void button_p_vs_p(){
@@ -88,11 +91,17 @@ namespace octet {
         player_two_AI = true;
       }
 
-      void button_ai_one(){}
+      void button_ai_one(){
+        type_AI = 1;
+      }
 
-      void button_ai_two(){}
+      void button_ai_two(){
+        type_AI = 2;
+      }
 
-      void button_ai_three(){}
+      void button_ai_three(){
+        type_AI = 3;
+      }
 
       void mouse(){
         if (is_key_going_down(key_lmb)){
@@ -167,7 +176,7 @@ namespace octet {
           }
         }
         //Player 2
-        if (!player_two.is_finishing()){
+        if (!player_two.is_finishing() && !player_two_AI){
           if (is_key_down('G')){
             if (!player_two.collision_with(player_one))
               player_two.input_action(MOVE_LEFT);
@@ -221,10 +230,22 @@ namespace octet {
         if (elapsed_seconds.count() > time_lapse){
           //Predict actions
           int predicted_action = predictiveAI.predict();
-          printf("Predicted action vs action => %i vs %i\n", predicted_action, player_one.get_action());
+          printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
+          //Decide action
+          if (player_two_AI)
+            switch (type_AI){
+            case 1:
+              player_two.AI_reaction_mimic((actions)predicted_action, player_one);
+              break;
+            case 2:
+              player_two.AI_reaction_defense((actions)predicted_action, player_one);
+              break;
+            case 3:
+              player_two.AI_reaction_balanced((actions)predicted_action, player_one);
+              break;
+          }
           //Memorize actions
-          if (!(player_one.get_action() == NONE_ACTION && predictiveAI.get_last() == NONE_ACTION)
-              && player_one.get_action() < FINISHING)
+          if (player_one.get_action() != NONE_ACTION && player_one.get_action() < FINISHING)
             predictiveAI.new_input(player_one.get_action());
           //Resolve actions
           if(player_one.execute_action(player_two))

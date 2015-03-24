@@ -15,7 +15,7 @@
 
 namespace octet{
   namespace PuppetFight{
-    enum {_SIZE_SEQUENCE = 10, _NUM_ACTIONS = 9};
+    enum {_SIZE_SEQUENCE = 5, _NUM_ACTIONS = 9};
 
     class SequenceInput{
       std::array<int, _SIZE_SEQUENCE> sequence;
@@ -49,7 +49,10 @@ namespace octet{
         }
 
         void set_top(int value){
-          sequence[top - 1] = value;
+          if (top != 0)
+            sequence[top - 1] = value;
+          else
+            sequence[_SIZE_SEQUENCE - 1] = value;
         }
 
         int get_element(std::size_t pos) const{
@@ -60,10 +63,12 @@ namespace octet{
         }
 
         void print_sequence(){
-          for (int i = size - 1; i >= 0; --i){
+          printf("Sequence: size %i: ", size);
+          for (int i = 0; i < size; ++i){
             //Obtain position in the array
-            std::size_t pos = top - i;
-            if (pos < 0) pos = _SIZE_SEQUENCE - pos;
+            int pos = top - 1 - i;
+            if (pos < 0) 
+              pos = _SIZE_SEQUENCE + pos;
             printf("%i ", sequence[pos]);
           }
           printf("\n");
@@ -132,12 +137,12 @@ namespace octet{
       }
 
     public:
-      PredictiveAI() : dimension_nGram(1), treshold(10){
+      PredictiveAI() : dimension_nGram(4), treshold(6){
         reset_n_gram();
       }
 
 
-      PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram), treshold(10){
+      PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram), treshold(6){
         reset_n_gram();
       }
 
@@ -188,26 +193,40 @@ namespace octet{
 
 
       int predict(){
+        //Debugging
+        cur_sequence.print_sequence();
+        
         int prediction = -1;
+        int temp_size = cur_sequence.get_size();
         //check n-gram
-        for (int i = 1; i < dimension_nGram && prediction == -1; ++i){
+        printf("Trying with... ");
+        for (int i = dimension_nGram-1; i >= 1 && prediction == -1; --i){
+          printf("%i ... ", i);
+          cur_sequence.set_size(i);
           if (nGram_sums[cur_sequence] > treshold){
             prediction = i;
           }
         }
+        printf("\n");
         if (prediction != -1){
+          printf("Predicting with nGram %i", prediction+1);
+          cur_sequence.set_size(cur_sequence.get_size() + 1);
           SequenceInput tempSequence(cur_sequence);
           tempSequence.new_input(0);
           std::size_t max = 0;
           std::size_t i_max = 0;
           std::vector<std::size_t> various_i_max;
+          printf("Trying with... ");
           for (int i = 0; i < _NUM_ACTIONS; ++i){
             tempSequence.set_top(i);
             if (nGram[tempSequence] > max){
+              various_i_max.clear();
+              tempSequence.print_sequence();
               max = nGram[tempSequence];
               i_max = i;
             }
             else if (max == oneGram[i]){
+              tempSequence.print_sequence();
               various_i_max.push_back(i);
             }
           }
@@ -215,10 +234,12 @@ namespace octet{
             prediction = random_gen.get(0, various_i_max.size());
           }
           else{
+            printf("Max selected!\n");
             prediction = i_max;
           }
         }
         else{
+          printf("Predicting with nGram 1");
           //check 1-gram
           std::size_t max = 0;
           std::size_t i_max = 0;
@@ -240,6 +261,7 @@ namespace octet{
             prediction = i_max;
           }
         }
+        cur_sequence.set_size(temp_size);
         return prediction;
       }
 
