@@ -180,7 +180,7 @@ namespace octet{
 
       void reset_puppet(){
         life = 100;
-        life_damage = 5;
+        life_damage = 10;
         node->access_nodeToParent().loadIdentity();
         node->translate(vec3(direction*-5.0f, 1.99f, -199.9f));
         position = -5 * direction;

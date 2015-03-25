@@ -297,14 +297,14 @@ namespace octet {
             predictiveAI.new_input(player_one.get_action());
           //Check if somebody won!
           if (player_one.get_life() <= 0){
-            //Player two won!
-            player_one_won = true;
+            //Player one lost!
+            player_one_won = false;
             player_one.move_left();
             steps = 2;
             _game_state = _GAME_OVER;
           }
           else if (player_two.get_life() <= 0){
-            //Player two won!
+            //Player one won!
             player_one_won = true;
             player_two.move_right();
             steps = 2;
