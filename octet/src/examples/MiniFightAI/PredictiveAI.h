@@ -131,7 +131,7 @@ namespace octet{
       std::unordered_map<SequenceInput, unsigned int, MyHash<SequenceInput>> nGram_sums;
 
       void reset_n_gram(){
-        for (int i = 0; i < 15; ++i){
+        for (int i = 0; i < oneGram.size(); ++i){
           oneGram[i] = 0;
         }
       }
@@ -154,10 +154,12 @@ namespace octet{
         cur_sequence.new_input(0);
       }
 
+      void set_dimension(std::size_t n_dimension){
+        dimension_nGram = n_dimension;
+      }
+
       void resetAI(){
-        for (int i = 0; i < oneGram.size(); ++i){
-          oneGram[i] = 0;
-        }
+        reset_n_gram();
         nGram.clear();
         nGram_sums.clear();
         cur_sequence.new_input(0);
@@ -204,17 +206,18 @@ namespace octet{
 
       int predict(){
         //Debugging
+        printf("\n");
         cur_sequence.print_sequence();
         
         int prediction = -1;
         int temp_size = cur_sequence.get_size();
         //check n-gram
         printf("Trying with... ");
-        for (int i = dimension_nGram-1; i >= 1 && prediction == -1; --i){
-          printf("%i ... ", i);
-          cur_sequence.set_size(i);
+        for (int i = dimension_nGram; i > 1 && prediction == -1; --i){
+          printf("%i ... ", i-1);
+          cur_sequence.set_size(i-1);
           if (nGram_sums[cur_sequence] > treshold){
-            prediction = i;
+            prediction = i-1;
           }
         }
         printf("\n");

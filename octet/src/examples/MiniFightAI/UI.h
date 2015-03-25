@@ -18,13 +18,17 @@ namespace octet {
       ref<scene_node> life_player_two;
       ref<material> red;
       ref<material> purple;
+      ref<mesh_instance> background_mesh;
+      dynarray<ref<material>> background_materials;
 
+      bool started;
       ref<visual_scene> game_scene;
     public:
       StageUI(){}
 
       void init(ref<visual_scene> n_game_scene){
         game_scene = n_game_scene;
+        started = false;
 
         image* topimage = new image("assets/AI/top.gif");
         image* topmask = new image("assets/AI/topmask.gif");
@@ -38,39 +42,25 @@ namespace octet {
         courtin_mat->add_sampler(1, app_utils::get_atom("topmask"), courtinmask, new sampler());
         material* bottom_mat = new material(new image("assets/AI/bottom.gif"));
         material* bottom_cover_mat = new material(new image("assets/AI/bottom_cover.gif"));
-        material* background_mat = nullptr;
-        int random_background = random_gen.get(0,6);
-        switch (random_background){
-        case 0:
-          background_mat = new material(new image("assets/AI/background.gif"));
-          break;
-        case 1:
-          background_mat = new material(new image("assets/AI/background_2.gif"));
-          break;
-        case 2:
-          background_mat = new material(new image("assets/AI/background_3.gif"));
-          break;
-        case 3:
-          background_mat = new material(new image("assets/AI/background_4.gif"));
-          break;
-        case 4:
-          background_mat = new material(new image("assets/AI/background_5.gif"));
-          break;
-        default:
-          background_mat = new material(new image("assets/AI/background_6.gif"));
-          break;
-        }
+
+        background_materials.push_back(new material(new image("assets/AI/background.gif")));
+        background_materials.push_back(new material(new image("assets/AI/background_2.gif")));
+        background_materials.push_back(new material(new image("assets/AI/background_3.gif")));
+        background_materials.push_back(new material(new image("assets/AI/background_4.gif")));
+        background_materials.push_back(new material(new image("assets/AI/background_5.gif")));
+        background_materials.push_back(new material(new image("assets/AI/background_6.gif")));
+
         material* black = new material(vec4(0, 0, 0, 1));
         red = new material(vec4(1, 0, 0, 1));
         purple = new material(vec4(.5f, 0, .5f, 1));
 
-        mesh_box* bottom_box = new mesh_box(vec3(22, 8, 0.02));
-        mesh_box* bottom_cover_box = new mesh_box(vec3(22, 8, 0.02));
-        mesh_box* top_box = new mesh_box(vec3(22, 8.5f, 0.05));
-        mesh_box* courtin_box = new mesh_box(vec3(20, 8.5f, 0.03));
-        mesh_box* background_box = new mesh_box(vec3(20, 8.5, 1));
-        mesh_box* life_one_box = new mesh_box(vec3(9, 1, 0.1));
-        mesh_box* life_two_box = new mesh_box(vec3(9, 1, 0.1));
+        mesh_box* bottom_box = new mesh_box(vec3(22, 8, 0.02f));
+        mesh_box* bottom_cover_box = new mesh_box(vec3(22, 8, 0.02f));
+        mesh_box* top_box = new mesh_box(vec3(22, 8.5f, 0.05f));
+        mesh_box* courtin_box = new mesh_box(vec3(20, 8.5f, 0.03f));
+        mesh_box* background_box = new mesh_box(vec3(20, 8.5f, 1));
+        mesh_box* life_one_box = new mesh_box(vec3(9, 1, 0.1f));
+        mesh_box* life_two_box = new mesh_box(vec3(9, 1, 0.1f));
         mesh_box* life_one_box_back = new mesh_box(vec3(9.15f, 1.1f, 0.1f));
         mesh_box* life_two_box_back = new mesh_box(vec3(9.15f, 1.1f, 0.1f));
 
@@ -106,7 +96,9 @@ namespace octet {
         game_scene->add_mesh_instance(new mesh_instance(bottom_cover, bottom_cover_box, bottom_cover_mat));
         game_scene->add_mesh_instance(new mesh_instance(courtin, courtin_box, courtin_mat));
         game_scene->add_mesh_instance(new mesh_instance(bottom, bottom_box, bottom_mat));
-        game_scene->add_mesh_instance(new mesh_instance(background, background_box, background_mat));
+        int random_background = random_gen.get(0, 5);
+        background_mesh = new mesh_instance(background, background_box, background_materials[random_background]);
+        game_scene->add_mesh_instance(background_mesh);
         game_scene->add_mesh_instance(new mesh_instance(top, top_box, top_mat));
         game_scene->add_mesh_instance(new mesh_instance(life_player_one, life_one_box, red));
         game_scene->add_mesh_instance(new mesh_instance(life_player_two, life_two_box, red));
@@ -116,10 +108,13 @@ namespace octet {
 
       void animate_intro(float t){
         courtin->access_nodeToParent().loadIdentity();
-        courtin->translate(vec3(0, 6*(1-t) + 20*t, 0));
+        courtin->translate(vec3(0, 6*(1-t) + 30*t, 0));
 
-        bottom_cover->access_nodeToParent().loadIdentity();
-        bottom_cover->translate(vec3(0, -10, 2*(1-t) + -3*t));
+        if (!started){
+          bottom_cover->access_nodeToParent().loadIdentity();
+          bottom_cover->translate(vec3(0, -10, 3 * (1 - t) + -1 * t));
+          if(t==1) started = true;
+        }
       }
 
       void update_lifes(int life1, int life2){
@@ -142,6 +137,9 @@ namespace octet {
 
         life_player_two->access_nodeToParent().loadIdentity();
         life_player_two->translate(vec3(11, -6, 1.2f));
+
+        int random_background = random_gen.get(0, 5);
+        background_mesh->set_material(background_materials[random_background]);
       }
     };
   }

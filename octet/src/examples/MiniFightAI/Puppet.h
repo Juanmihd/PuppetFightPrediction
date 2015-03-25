@@ -17,7 +17,6 @@ namespace octet{
       OUCH_UP = 10, OUCH_MID = 11, OUCH_DOWN = 12
     };
 
-
     class Puppet{
       //Info of how to visualize
       ref<scene_node> node;
@@ -28,23 +27,11 @@ namespace octet{
       int direction;
       int position;
       int life;
+      int life_damage;
       actions prev_action;
       actions next_action;
       actions next_next_action;
-
-      //movement actions
-      void move_left(){
-        node->translate(vec3(-1.0f, 0.0f, 0.0f));
-        puppet_instance->set_material(materials[1]);
-        position -= 1;
-      }
-
-      void move_right(){
-        node->translate(vec3(1.0f, 0.0f, 0.0f));
-        puppet_instance->set_material(materials[2]);
-        position += 1;
-      }
-
+      
       //Attack functions
       bool punch(height level, Puppet& enemy){
         puppet_instance->set_material(materials[3 + (int)level]);
@@ -55,7 +42,7 @@ namespace octet{
       }
 
       void ouch(height level){
-        life -= 10;
+        life -= life_damage;
         puppet_instance->set_material(materials[10 + ((level == HEIGHT_UP) ? 0 : 1)]);
       }
 
@@ -65,7 +52,10 @@ namespace octet{
 
       //Still!
       void still(){
-        puppet_instance->set_material(materials[0]);
+        if (life>0)
+          puppet_instance->set_material(materials[0]);
+        else
+          puppet_instance->set_material(materials[11]);
       }
 
       void init_materials(){
@@ -97,6 +87,8 @@ namespace octet{
           images.push_back(new image("assets/AI/PuppetOuchUp01Mask.gif"));
           images.push_back(new image("assets/AI/PuppetOuchMid01.gif"));
           images.push_back(new image("assets/AI/PuppetOuchMid01Mask.gif"));
+
+          images.push_back(new image("assets/AI/PuppetLost.gif"));
         }
         else{
           images.push_back(new image("assets/AI/Puppet2Rest01.gif"));
@@ -124,6 +116,8 @@ namespace octet{
           images.push_back(new image("assets/AI/Puppet2OuchUp01Mask.gif"));
           images.push_back(new image("assets/AI/Puppet2OuchMid01.gif"));
           images.push_back(new image("assets/AI/Puppet2OuchMid01Mask.gif"));
+
+          images.push_back(new image("assets/AI/Puppet2Lost.gif"));
         }
         param_shader* param = new param_shader("shaders/default.vs", "shaders/multitexture.fs");
         for (int i = 0; i < 11; ++i){
@@ -132,6 +126,10 @@ namespace octet{
           new_mat->add_sampler(1, app_utils::get_atom("topmask"), images[2*i+1], new sampler());
           materials.push_back(new_mat);
         }
+        material* new_mat = new material(vec4(1, 1, 1, 1), param);
+        new_mat->add_sampler(0, app_utils::get_atom("top"), images[22], new sampler());
+        new_mat->add_sampler(1, app_utils::get_atom("topmask"), images[1], new sampler());
+        materials.push_back(new_mat);
       }
 
     public:
@@ -139,10 +137,9 @@ namespace octet{
 
       void init(ref<visual_scene> n_game_scene, int n_direction = 1, material* n_material = nullptr){
         game_scene = n_game_scene;
-        direction = n_direction;
+        direction = n_direction; 
 
         init_materials();
-        reset_puppet();
 
         mesh_box* puppet_box = new mesh_box(vec3(2, 4, 200));
         node = new scene_node();
@@ -158,13 +155,35 @@ namespace octet{
 
       }
 
+      //movement actions
+      void move_left(){
+        node->translate(vec3(-1.0f, 0.0f, 0.0f));
+        puppet_instance->set_material(materials[1]);
+        position -= 1;
+      }
+
+      void move_right(){
+        node->translate(vec3(1.0f, 0.0f, 0.0f));
+        puppet_instance->set_material(materials[2]);
+        position += 1;
+      }
+
+      void set_life_damage(int n){
+        life_damage = n;
+      }
+
       void animate_intro(float t){
         node->access_nodeToParent().loadIdentity();
-        node->translate(vec3(direction*-5.0f, -8*(1-t) + 2*t, -199.9f));
+        node->translate(vec3(direction*-(6.f * (1 - t) + 5.0f*t), -8.f * (1 - t) + 1.99f*t, -199.9f));
+        node->rotate(direction * (-45) * (1 - t), vec3(0, 0, 1));
       }
 
       void reset_puppet(){
         life = 100;
+        life_damage = 5;
+        node->access_nodeToParent().loadIdentity();
+        node->translate(vec3(direction*-5.0f, 1.99f, -199.9f));
+        position = -5 * direction;
       }
 
       int get_life(){
@@ -366,7 +385,7 @@ namespace octet{
 
       bool collision_with(Puppet& enemy){
         int distance = position - enemy.get_position();
-        if (distance < 0) distance *= -1.0f;
+        if (distance < 0) distance *= -1;
         return distance < 4;
       }
 
