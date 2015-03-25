@@ -16,88 +16,114 @@
 
 namespace octet {
   namespace PuppetFight{
-    /// Scene containing a box with octet.
+    /// @brief This class contains the information of the 'game' itself. 
+    ///
     class MiniFightAI : public app {
       enum GameState { _INTRO = -1, _INTRO_ANIMATION = 0, _PLAYING = 1, _GAME_OVER = 2 } _game_state;
-
+      //This boolean will containg the cheating mode
       bool cheating;
+      //This contains if the player two is controlled by an AI
       bool player_two_AI;
+      //This contains the information whereas player one won or lost
       bool player_one_won;
+      //This contains the information of the AI (1-3)
       int type_AI;
+      //This functions is used to control the 'steps' of the animations (win animation)
       int steps;
+      //This will contain the time lapse of the intro animation
       float time_animation;
+      //This will contain the lapse of each movement (whenever the actions are resolved)
       float time_lapse;
+      //This will be the half of the time the actions are resolved (to show another intermediate frame)
       float half_time_lapse;
+      //This two counters are used to control the animation in the intro and the distance between the actions
       std::chrono::time_point<std::chrono::system_clock> previous_action;
       std::chrono::time_point<std::chrono::system_clock> cur_animation;
       // scene for drawing box
       ref<visual_scene> app_scene;
+      //This contains the User Interface and the stage
       StageUI stage_puppet;
+      //The two players
       Puppet player_one;
       Puppet player_two;
+      //This is the module of the AI (implemented with nGram)
       PredictiveAI predictiveAI;
 
     public:
-      /// this is called when we construct the class before everything is initialised.
+      /// @brief This is the constructior with parameters (to obtain some information if needed
       MiniFightAI(int argc, char **argv) : app(argc, argv) {
       }
 
-      /// this is called once OpenGL is initialized
+      /// @brief This will be called to initializate the game
       void app_init() {
         //Set really random seed
         unsigned int seed = (unsigned int) std::chrono::system_clock::now().time_since_epoch().count();
         random_gen.set_seed(seed);
+        //Create a new scene
         app_scene =  new visual_scene();
-
+        //Init the predictive AI
         predictiveAI.init(4); 
+        //Init some booleans, for victory, AI, and chea
         player_two_AI = false;
         cheating = false;
         player_one_won = false;
+        //Select the starting mode of the AI (mode 1)
         type_AI = 1;
-
+        //Set up the scene with default camera and lights
         app_scene->create_default_camera_and_lights();
-
+        //Init the user interface and the players
         stage_puppet.init(app_scene);
-
         player_one.init(app_scene);
         player_two.init(app_scene,-1);
+        //Set up some variables to control the animations and actions lapse
         time_lapse = 0.3f;
         half_time_lapse = time_lapse * 0.5f;
         time_animation = 1.5f;
         previous_action = std::chrono::system_clock::now();
+        //Set up the game state to "intro"
         _game_state = _INTRO;
       }
 
+      /// @brief This function will reste the game to start playing again!
       void reset_game(){
+        //Reste puppets and stage
         player_one.reset_puppet();
         player_two.reset_puppet();
         stage_puppet.reset_UI();
+        //Set up the intro animation
         _game_state = _INTRO_ANIMATION;
         cur_animation = std::chrono::system_clock::now();
+        //Reset the speed of the game, in case that it was changed
         time_lapse = 0.3f;
         half_time_lapse = time_lapse * 0.5f;
       }
 
+      /// @brief This will be called when clicked the P V P button
       void button_p_vs_p(){
         player_two_AI = false;
       }
 
+      /// @brief This will be called when clicked the P V AI button
       void button_p_vs_ai(){
         player_two_AI = true;
       }
 
+      /// @brief This will be called when clicked the AI 1 button
       void button_ai_one(){
         type_AI = 1;
       }
 
+      /// @brief This will be called when clicked the AI 2 button
       void button_ai_two(){
         type_AI = 2;
       }
 
+      /// @brief This will be called when clicked the AI 3 button
       void button_ai_three(){
         type_AI = 3;
       }
 
+      /// @brief This will be called when clicked the 'invisible' cheating button (just below P V AI)
       void button_cheating(){
         cheating = !cheating;
         if (cheating){
@@ -110,6 +136,7 @@ namespace octet {
         }
       }
 
+      /// @brief This will be called when the speed buttons are pressed
       void button_speed(float inc){
         time_lapse += inc;
         if (time_lapse < 0.15f) time_lapse = 0.15f;
@@ -117,9 +144,10 @@ namespace octet {
         half_time_lapse = time_lapse * 0.5f;
       }
 
+      /// @brief This function controls all the actions of the mouse
       void mouse(){
         if (is_key_going_down(key_lmb)){
-          if (_game_state == _INTRO){
+          if (_game_state == _INTRO){ //If the game is in "intro", launch the intro animation
             _game_state = _INTRO_ANIMATION;
             cur_animation = std::chrono::system_clock::now();
           }
