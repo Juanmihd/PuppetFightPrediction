@@ -155,7 +155,7 @@ namespace octet{
 
       }
 
-      //movement actions
+      //movement actions      
       void move_left(){
         node->translate(vec3(-1.0f, 0.0f, 0.0f));
         puppet_instance->set_material(materials[1]);
@@ -192,6 +192,10 @@ namespace octet{
       
       void input_action(actions n_action){
         next_action = n_action;
+      }
+
+      actions random_action(){
+        return static_cast<actions> (random_gen.get(0, 8));
       }
 
       void AI_reaction_balanced(actions n_action, Puppet& player){

@@ -59,10 +59,10 @@ namespace octet {
         mesh_box* top_box = new mesh_box(vec3(22, 8.5f, 0.05f));
         mesh_box* courtin_box = new mesh_box(vec3(20, 8.5f, 0.03f));
         mesh_box* background_box = new mesh_box(vec3(20, 8.5f, 1));
-        mesh_box* life_one_box = new mesh_box(vec3(9, 1, 0.1f));
-        mesh_box* life_two_box = new mesh_box(vec3(9, 1, 0.1f));
-        mesh_box* life_one_box_back = new mesh_box(vec3(9.15f, 1.1f, 0.1f));
-        mesh_box* life_two_box_back = new mesh_box(vec3(9.15f, 1.1f, 0.1f));
+        mesh_box* life_one_box = new mesh_box(vec3(8, 1, 0.1f));
+        mesh_box* life_two_box = new mesh_box(vec3(8, 1, 0.1f));
+        mesh_box* life_one_box_back = new mesh_box(vec3(8.15f, 1.1f, 0.1f));
+        mesh_box* life_two_box_back = new mesh_box(vec3(8.15f, 1.1f, 0.1f));
 
         bottom = new scene_node();
         bottom->translate(vec3(0, -10, 1));
@@ -75,13 +75,13 @@ namespace octet {
         courtin = new scene_node();
         courtin->translate(vec3(0, 6, 0));
         life_player_one = new scene_node();
-        life_player_one->translate(vec3(-11, -6, 1.2f));
+        life_player_one->translate(vec3(-12, -6, 1.2f));
         life_player_two = new scene_node();
-        life_player_two->translate(vec3(11, -6, 1.2f));
+        life_player_two->translate(vec3(12, -6, 1.2f));
         scene_node* life_one_node_back = new scene_node();
-        life_one_node_back->translate(vec3(-11.1f, -6, 1));
+        life_one_node_back->translate(vec3(-12, -6, 1));
         scene_node* life_two_node_back = new scene_node();
-        life_two_node_back->translate(vec3(11.1f, -6, 1));
+        life_two_node_back->translate(vec3(12, -6, 1));
 
         game_scene->add_child(courtin);
         game_scene->add_child(bottom_cover);
@@ -119,24 +119,24 @@ namespace octet {
 
       void update_lifes(int life1, int life2){
         life_player_one->access_nodeToParent().loadIdentity();
-        life_player_one->translate(vec3(-11, -6, 1.2f));
-        life_player_one->translate(vec3(-9, 0, 0));
+        life_player_one->translate(vec3(-12, -6, 1.2f));
+        life_player_one->translate(vec3(-8, 0, 0));
         life_player_one->scale(vec3(life1 / 100.0f, 1, 1));
-        life_player_one->translate(vec3(9, 0, 0));
+        life_player_one->translate(vec3(8, 0, 0));
 
         life_player_two->access_nodeToParent().loadIdentity();
-        life_player_two->translate(vec3(11, -6, 1.2f));
-        life_player_two->translate(vec3(9, 0, 0));
+        life_player_two->translate(vec3(12, -6, 1.2f));
+        life_player_two->translate(vec3(8, 0, 0));
         life_player_two->scale(vec3(life2 / 100.0f, 1, 1));
-        life_player_two->translate(vec3(-9, 0, 0));
+        life_player_two->translate(vec3(-8, 0, 0));
       }
 
       void reset_UI(){
         life_player_one->access_nodeToParent().loadIdentity();
-        life_player_one->translate(vec3(-11, -6, 1.2f));
+        life_player_one->translate(vec3(-12, -6, 1.2f));
 
         life_player_two->access_nodeToParent().loadIdentity();
-        life_player_two->translate(vec3(11, -6, 1.2f));
+        life_player_two->translate(vec3(12, -6, 1.2f));
 
         int random_background = random_gen.get(0, 5);
         background_mesh->set_material(background_materials[random_background]);

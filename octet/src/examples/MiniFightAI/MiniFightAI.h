@@ -22,12 +22,16 @@ namespace octet {
       enum GameState { _INTRO = -1, _INTRO_ANIMATION = 0, _PLAYING = 1, _GAME_OVER = 2 } _game_state;
       //This boolean will containg the cheating mode
       bool cheating;
+      //This contains if the player one is controlled by an AI
+      int player_one_AI;
       //This contains if the player two is controlled by an AI
-      bool player_two_AI;
+      int player_two_AI;
       //This contains the information whereas player one won or lost
       bool player_one_won;
       //This contains the information of the AI (1-3)
-      int type_AI;
+      int type_one_AI;
+      //This contains the information of the AI (1-3)
+      int type_two_AI;
       //This functions is used to control the 'steps' of the animations (win animation)
       int steps;
       //This will contain the time lapse of the intro animation
@@ -48,6 +52,7 @@ namespace octet {
       Puppet player_two;
       //This is the module of the AI (implemented with nGram)
       PredictiveAI predictiveAI;
+      PredictiveAI predictiveAI_one;
 
     public:
       /// @brief This is the constructior with parameters (to obtain some information if needed
@@ -64,11 +69,11 @@ namespace octet {
         //Init the predictive AI
         predictiveAI.init(4); 
         //Init some booleans, for victory, AI, and chea
-        player_two_AI = false;
+        player_one_AI = player_two_AI = 0;
         cheating = false;
         player_one_won = false;
-        //Select the starting mode of the AI (mode 1)
-        type_AI = 1;
+        //Select the starting mode of the AI (mode 1 mimic)
+        type_two_AI = type_one_AI = 1;
         //Set up the scene with default camera and lights
         app_scene->create_default_camera_and_lights();
         //Init the user interface and the players
@@ -98,29 +103,14 @@ namespace octet {
         half_time_lapse = time_lapse * 0.5f;
       }
 
-      /// @brief This will be called when clicked the P V P button
-      void button_p_vs_p(){
-        player_two_AI = false;
-      }
-
       /// @brief This will be called when clicked the P V AI button
-      void button_p_vs_ai(){
-        player_two_AI = true;
+      void button_p1_ai(int value){
+        player_one_AI = value;
       }
 
-      /// @brief This will be called when clicked the AI 1 button
-      void button_ai_one(){
-        type_AI = 1;
-      }
-
-      /// @brief This will be called when clicked the AI 2 button
-      void button_ai_two(){
-        type_AI = 2;
-      }
-
-      /// @brief This will be called when clicked the AI 3 button
-      void button_ai_three(){
-        type_AI = 3;
+      /// @brief This will be called when clicked the P V P button
+      void button_p2_ai(int value){
+        player_two_AI = value;
       }
 
       /// @brief This will be called when clicked the 'invisible' cheating button (just below P V AI)
@@ -160,11 +150,12 @@ namespace octet {
             get_viewport_size(vx, vy);
             float rx = 1.0f*x / vx;
             float ry = 1.0f*y / vy;
-            if (rx <= 0.5f){
+            printf("X%f, Y%f\n",rx, ry);
+            if (rx <= 0.42f){
               if (rx < 0.19f){
                 if (rx > 0.12f){
                   if (ry >= 0.8f && ry <= 0.85f)
-                    reset_game();
+                    button_p1_ai(0);
                   else if (ry >= 0.88f && ry <= 0.94f)
                     button_speed(0.05f);
                 }
@@ -172,80 +163,119 @@ namespace octet {
               else if (rx < 0.35f){
                 if (rx > 0.236f && rx < 0.30f){
                   if (ry >= 0.8f && ry <= 0.85f)
-                    button_p_vs_p();
+                    button_p1_ai(1);
                   else if (ry >= 0.88f && ry <= 0.94f)
                     button_speed(-0.05f);
                 }
               }
               else if (rx < 0.42f){
                 if (ry >= 0.8f && ry <= 0.85f)
-                  button_p_vs_ai();
+                  button_p1_ai(-1);
                 else if (ry >= 0.88f && ry <= 0.94f)
                   button_cheating();
               }
             }
-            else{
+            else if(rx >= 0.58f){
               if (rx > 0.81f){
                 if (rx < 0.88f){
                   if (ry >= 0.8f && ry <= 0.85f)
-                    button_ai_one();
+                    button_p2_ai(0);
                   else if (ry >= 0.88f && ry <= 0.94f)
-                    predictiveAI.set_dimension(1);
+                    predictiveAI.resetAI();
                 }
               }
               else if (rx > 0.65f){
                 if (rx < 0.764f && rx > 0.7f){
                   if (ry >= 0.8f && ry <= 0.85f)
-                    button_ai_two();
+                    button_p2_ai(1);
                   else if (ry >= 0.88f && ry <= 0.94f)
                     predictiveAI.set_dimension(4);
                 }
               }
-                else if (rx > 0.58f){
-                  if (ry >= 0.8f && ry <= 0.85f)
-                    button_ai_three();
-                  else if (ry >= 0.88f && ry <= 0.94f)
-                    predictiveAI.resetAI();
-                }
+              else if (rx > 0.58f){
+                if (ry >= 0.8f && ry <= 0.85f)
+                  button_p2_ai(-1);
+                else if (ry >= 0.88f && ry <= 0.94f)
+                  predictiveAI.set_dimension(1);
+              }
+            }
+            else{
+              if (ry >= 0.8f && ry <= 0.85f)
+                button_p2_ai(-1);
+              else if (ry >= 0.88f && ry <= 0.94f)
+                predictiveAI.set_dimension(1);
             }
           }
         }
       }
 
+      /// @brief This function will control all the inputs from keyboard
       void keyboard(){
         //Player 1
         if (!player_one.is_finishing()){
-          if (is_key_down('A')){
-            if (player_one.get_position() >= -14){
-              player_one.input_action(MOVE_LEFT);
+          if (player_one_AI == -1){
+            actions action = player_one.random_action();
+            if (action == MOVE_RIGHT){
+              if (!player_one.collision_with(player_two)){
+                player_one.input_action(MOVE_RIGHT);
+              }
+              else{
+                player_one.input_action(PUNCH_MID);
+              }
+            }
+            else if (action == MOVE_LEFT){
+              if (player_one.get_position() >= -14){
+                player_one.input_action(MOVE_LEFT);
+              }
             }
           }
-          else if (is_key_down('D')){
-            if (!player_one.collision_with(player_two)){
-              player_one.input_action(MOVE_RIGHT);
+          else if (player_one_AI == 0){
+            if (is_key_down('A')){
+              if (player_one.get_position() >= -14){
+                player_one.input_action(MOVE_LEFT);
+              }
             }
-            else{
-              player_one.input_action(PUNCH_MID);
+            else if (is_key_down('D')){
+              if (!player_one.collision_with(player_two)){
+                player_one.input_action(MOVE_RIGHT);
+              }
+              else{
+                player_one.input_action(PUNCH_MID);
+              }
+            }
+            else if (is_key_down('E')){
+              player_one.input_action(PUNCH_UP);
+            }
+            else if (is_key_down('C')){
+              player_one.input_action(PUNCH_DOWN);
+            }
+            else if (is_key_down('W')){
+              player_one.input_action(BLOCK_UP);
+            }
+            else if (is_key_down('S')){
+              player_one.input_action(BLOCK_MID);
+            }
+            else if (is_key_down('X')){
+              player_one.input_action(BLOCK_DOWN);
             }
           }
-          else if (is_key_down('E')){
-            player_one.input_action(PUNCH_UP);
-          }
-          else if (is_key_down('C')){
-            player_one.input_action(PUNCH_DOWN);
-          }
-          else if (is_key_down('W')){
-            player_one.input_action(BLOCK_UP);
-          }
-          else if (is_key_down('S')){
-            player_one.input_action(BLOCK_MID);
-          }
-          else if (is_key_down('X')){
-            player_one.input_action(BLOCK_DOWN);
+          else{
+            actions predicted_action = static_cast<actions> (predictiveAI_one.predict());
+            switch (type_one_AI){
+            case 1:
+              player_one.AI_reaction_mimic(predicted_action, player_one);
+              break;
+            case 2:
+              player_one.AI_reaction_defense(predicted_action, player_one);
+              break;
+            case 3:
+              player_one.AI_reaction_balanced(predicted_action, player_one);
+              break;
+            }
           }
         }
         //Player 2
-        if (!player_two.is_finishing() && !player_two_AI){
+        if (!player_two.is_finishing() && player_two_AI == 0){
           if (is_key_down('G')){
             if (!player_two.collision_with(player_one))
               player_two.input_action(MOVE_LEFT);
@@ -274,23 +304,41 @@ namespace octet {
         }
       }
 
+      /// @brief This function will be called on the half of each 'game-frame'
+      /// This 
       void mid_frame(){
         if (_game_state == _PLAYING){
           //Predict actions
-          int predicted_action = predictiveAI.predict();
-          printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
+          actions predicted_action = static_cast<actions> (predictiveAI.predict());
+          //printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
           //Decide action
-          if (player_two_AI)
-            switch (type_AI){
+          if (player_two_AI == 1) // AI MOVEMENT
+            switch (type_two_AI){
             case 1:
-              player_two.AI_reaction_mimic((actions)predicted_action, player_one);
+              player_two.AI_reaction_mimic(predicted_action, player_one);
               break;
             case 2:
-              player_two.AI_reaction_defense((actions)predicted_action, player_one);
+              player_two.AI_reaction_defense(predicted_action, player_one);
               break;
             case 3:
-              player_two.AI_reaction_balanced((actions)predicted_action, player_one);
+              player_two.AI_reaction_balanced(predicted_action, player_one);
               break;
+          }
+          else if (player_two_AI == -1){ // RANDOM MOVEMENT!
+            actions action = player_two.random_action();
+            if (action == MOVE_LEFT){
+              if (!player_two.collision_with(player_one)){
+                player_two.input_action(MOVE_LEFT);
+              }
+              else{
+                player_two.input_action(PUNCH_MID);
+              }
+            }
+            else if (action == MOVE_RIGHT){
+              if (player_two.get_position() >= 14){
+                player_two.input_action(MOVE_RIGHT);
+              }
+            }
           }
         }
         else if (_game_state == _GAME_OVER){
@@ -354,6 +402,7 @@ namespace octet {
         int vx = 0, vy = 0;
         get_viewport_size(vx, vy);
         app_scene->begin_render(vx, vy);
+
         // obtain input from mouse and keyboard
         mouse();
         if (_game_state == _PLAYING)

@@ -15,7 +15,7 @@
 
 namespace octet{
   namespace PuppetFight{
-    enum {_SIZE_SEQUENCE = 5, _NUM_ACTIONS = 9, _DEBUGGING = 0};
+    enum {_SIZE_SEQUENCE = 5, _NUM_ACTIONS = 9, _DEBUGGING = 1};
 
     class SequenceInput{
       std::array<int, _SIZE_SEQUENCE> sequence;
@@ -203,7 +203,6 @@ namespace octet{
         return cur_sequence.get_element(0);
       }
 
-
       int predict(){
         //Debugging
         if (_DEBUGGING){
@@ -214,34 +213,34 @@ namespace octet{
         int prediction = -1;
         int temp_size = cur_sequence.get_size();
         //check n-gram
-        if (_DEBUGGING) printf("Trying with... ");
+        if (_DEBUGGING == 0) printf("Trying with... ");
         for (int i = dimension_nGram; i > 1 && prediction == -1; --i){
-          if (_DEBUGGING) printf("%i ... ", i - 1);
+          if (_DEBUGGING == 0) printf("%i ... ", i - 1);
           cur_sequence.set_size(i-1);
           if (nGram_sums[cur_sequence] > treshold){
             prediction = i-1;
           }
         }
-        if (_DEBUGGING) printf("\n");
+        if (_DEBUGGING == 0) printf("\n");
         if (prediction != -1){
-          if (_DEBUGGING) printf("Predicting with nGram %i", prediction + 1);
+          if (_DEBUGGING == 0) printf("Predicting with nGram %i", prediction + 1);
           cur_sequence.set_size(cur_sequence.get_size() + 1);
           SequenceInput tempSequence(cur_sequence);
           tempSequence.new_input(0);
           std::size_t max = 0;
           std::size_t i_max = 0;
           std::vector<std::size_t> various_i_max;
-          if (_DEBUGGING) printf("Trying with... ");
+          if (_DEBUGGING == 0) printf("Trying with... ");
           for (int i = 0; i < _NUM_ACTIONS; ++i){
             tempSequence.set_top(i);
             if (nGram[tempSequence] > max){
               various_i_max.clear();
-              if (_DEBUGGING) tempSequence.print_sequence();
+              if (_DEBUGGING == 0) tempSequence.print_sequence();
               max = nGram[tempSequence];
               i_max = i;
             }
             else if (max == oneGram[i]){
-              tempSequence.print_sequence();
+              if (_DEBUGGING == 0) tempSequence.print_sequence();
               various_i_max.push_back(i);
             }
           }
@@ -249,12 +248,12 @@ namespace octet{
             prediction = random_gen.get(0, various_i_max.size());
           }
           else{
-            if (_DEBUGGING) printf("Max selected!\n");
+            if (_DEBUGGING == 0) printf("Max selected!\n");
             prediction = i_max;
           }
         }
         else{
-          if (_DEBUGGING) printf("Predicting with nGram 1");
+          if (_DEBUGGING == 0) printf("Predicting with nGram 1");
           //check 1-gram
           std::size_t max = 0;
           std::size_t i_max = 0;
