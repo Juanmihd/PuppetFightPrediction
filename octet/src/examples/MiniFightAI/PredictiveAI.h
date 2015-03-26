@@ -205,7 +205,7 @@ namespace octet{
 
       int predict(){
         //Debugging
-        if (_DEBUGGING){
+        if (_DEBUGGING == 0){
           printf("\n");
           cur_sequence.print_sequence();
         }

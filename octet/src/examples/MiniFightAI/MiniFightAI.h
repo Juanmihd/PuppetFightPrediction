@@ -113,6 +113,14 @@ namespace octet {
         player_two_AI = value;
       }
 
+      void button_p1_type(int value){
+        type_one_AI = value;
+      }
+
+      void button_p2_type(int value){
+        type_two_AI = value;
+      }
+
       /// @brief This will be called when clicked the 'invisible' cheating button (just below P V AI)
       void button_cheating(){
         cheating = !cheating;
@@ -129,7 +137,7 @@ namespace octet {
       /// @brief This will be called when the speed buttons are pressed
       void button_speed(float inc){
         time_lapse += inc;
-        if (time_lapse < 0.15f) time_lapse = 0.15f;
+        if (time_lapse < 0.05f) time_lapse = 0.05f;
         else if (time_lapse > 1.0f) time_lapse = 1.0f;
         half_time_lapse = time_lapse * 0.5f;
       }
@@ -150,60 +158,77 @@ namespace octet {
             get_viewport_size(vx, vy);
             float rx = 1.0f*x / vx;
             float ry = 1.0f*y / vy;
-            printf("X%f, Y%f\n",rx, ry);
+            //printf("X%f, Y%f\n",rx, ry);
             if (rx <= 0.42f){
               if (rx < 0.19f){
                 if (rx > 0.12f){
-                  if (ry >= 0.8f && ry <= 0.85f)
+                  if (ry >= 0.72f && ry <= 0.78f)
                     button_p1_ai(0);
+                  else if (ry >= 0.8f && ry <= 0.85f)
+                    button_p1_type(1);
                   else if (ry >= 0.88f && ry <= 0.94f)
-                    button_speed(0.05f);
+                    predictiveAI_one.set_dimension(1);
                 }
               }
               else if (rx < 0.35f){
                 if (rx > 0.236f && rx < 0.30f){
-                  if (ry >= 0.8f && ry <= 0.85f)
+                  if (ry >= 0.72f && ry <= 0.78f)
                     button_p1_ai(1);
+                  else if (ry >= 0.8f && ry <= 0.85f)
+                    button_p1_type(2);
                   else if (ry >= 0.88f && ry <= 0.94f)
-                    button_speed(-0.05f);
+                    predictiveAI_one.set_dimension(4);
                 }
               }
               else if (rx < 0.42f){
-                if (ry >= 0.8f && ry <= 0.85f)
+                if (ry >= 0.72f && ry <= 0.78f)
                   button_p1_ai(-1);
+                else if (ry >= 0.8f && ry <= 0.85f)
+                  button_p1_type(3);
                 else if (ry >= 0.88f && ry <= 0.94f)
-                  button_cheating();
+                  predictiveAI_one.resetAI();
               }
             }
             else if(rx >= 0.58f){
               if (rx > 0.81f){
                 if (rx < 0.88f){
-                  if (ry >= 0.8f && ry <= 0.85f)
-                    button_p2_ai(0);
+                  if (ry >= 0.72f && ry <= 0.78f)
+                    button_p2_ai(-1);
+                  else if (ry >= 0.8f && ry <= 0.85f)
+                    button_p2_type(3);
                   else if (ry >= 0.88f && ry <= 0.94f)
                     predictiveAI.resetAI();
                 }
               }
               else if (rx > 0.65f){
                 if (rx < 0.764f && rx > 0.7f){
-                  if (ry >= 0.8f && ry <= 0.85f)
+                  if (ry >= 0.72f && ry <= 0.78f)
                     button_p2_ai(1);
+                  else if (ry >= 0.8f && ry <= 0.85f)
+                    button_p2_type(2);
                   else if (ry >= 0.88f && ry <= 0.94f)
                     predictiveAI.set_dimension(4);
                 }
               }
               else if (rx > 0.58f){
-                if (ry >= 0.8f && ry <= 0.85f)
-                  button_p2_ai(-1);
+                if (ry >= 0.72f && ry <= 0.78f)
+                  button_p2_ai(0);
+                else if (ry >= 0.8f && ry <= 0.85f)
+                  button_p2_type(1);
                 else if (ry >= 0.88f && ry <= 0.94f)
                   predictiveAI.set_dimension(1);
               }
             }
             else{
-              if (ry >= 0.8f && ry <= 0.85f)
-                button_p2_ai(-1);
+              if (ry >= 0.77f && ry <= 0.83f)
+                reset_game();
               else if (ry >= 0.88f && ry <= 0.94f)
-                predictiveAI.set_dimension(1);
+                if (rx > 0.5f)
+                  button_speed(-0.05f);
+                else
+                  button_speed(0.05f);
+              else
+                button_cheating();
             }
           }
         }
@@ -263,13 +288,13 @@ namespace octet {
             actions predicted_action = static_cast<actions> (predictiveAI_one.predict());
             switch (type_one_AI){
             case 1:
-              player_one.AI_reaction_mimic(predicted_action, player_one);
+              player_one.AI_reaction_mimic(predicted_action, player_two);
               break;
             case 2:
-              player_one.AI_reaction_defense(predicted_action, player_one);
+              player_one.AI_reaction_defense(predicted_action, player_two);
               break;
             case 3:
-              player_one.AI_reaction_balanced(predicted_action, player_one);
+              player_one.AI_reaction_balanced(predicted_action, player_two);
               break;
             }
           }
@@ -312,7 +337,7 @@ namespace octet {
           actions predicted_action = static_cast<actions> (predictiveAI.predict());
           //printf(" predicted action => %i vs action => %i\n", predicted_action, player_one.get_action());
           //Decide action
-          if (player_two_AI == 1) // AI MOVEMENT
+          if (player_two_AI == 1){ // AI MOVEMENT
             switch (type_two_AI){
             case 1:
               player_two.AI_reaction_mimic(predicted_action, player_one);
@@ -323,6 +348,7 @@ namespace octet {
             case 3:
               player_two.AI_reaction_balanced(predicted_action, player_one);
               break;
+            }
           }
           else if (player_two_AI == -1){ // RANDOM MOVEMENT!
             actions action = player_two.random_action();
@@ -335,9 +361,12 @@ namespace octet {
               }
             }
             else if (action == MOVE_RIGHT){
-              if (player_two.get_position() >= 14){
+              if (player_two.get_position() <= 14){
                 player_two.input_action(MOVE_RIGHT);
               }
+            }
+            else{
+              player_two.input_action(action);
             }
           }
         }
@@ -371,6 +400,9 @@ namespace octet {
           //Memorize actions
           if (player_one.get_action() != NONE_ACTION && player_one.get_action() < FINISHING)
             predictiveAI.new_input(player_one.get_action());
+          //Memorize actions
+          if (player_two.get_action() != NONE_ACTION && player_two.get_action() < FINISHING)
+            predictiveAI_one.new_input(player_two.get_action());
           //Check if somebody won!
           if (player_one.get_life() <= 0){
             //Player one lost!

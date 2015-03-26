@@ -14,7 +14,7 @@ namespace octet{
 
     enum actions{
       NONE_ACTION = 0, MOVE_LEFT = 1, MOVE_RIGHT = 2, PUNCH_UP = 3, PUNCH_DOWN = 4, PUNCH_MID = 5, BLOCK_UP = 6, BLOCK_MID = 7, BLOCK_DOWN = 8, FINISHING = 9,
-      OUCH_UP = 10, OUCH_MID = 11, OUCH_DOWN = 12
+      OUCH_UP = 10, OUCH_MID = 11, OUCH_DOWN = 12, DEAD = 13
     };
 
     class Puppet{
@@ -195,59 +195,91 @@ namespace octet{
       }
 
       actions random_action(){
-        return static_cast<actions> (random_gen.get(0, 8));
+        if (next_action >= FINISHING)
+          return next_action;
+        else
+          return static_cast<actions> (random_gen.get(0, 8));
       }
 
-      void AI_reaction_balanced(actions n_action, Puppet& player){
+      void AI_reaction_balanced(actions n_action, Puppet& player, int distance_treshold = 7){
         int random = random_gen.get(0, 10);
-        if (next_action < FINISHING)
-          switch (n_action){
-          case MOVE_LEFT:
-            if (random < 5)
-              if (!collision_with(player))
-                next_action = MOVE_LEFT;
+
+        int distance = math::abs(position - player.get_position());
+        
+        if (distance > distance_treshold){
+          if (direction == 1)
+            next_action = MOVE_RIGHT;
+          else
+            next_action = MOVE_LEFT;
+        }
+        else{
+          if (next_action < FINISHING)
+            switch (n_action){
+            case MOVE_LEFT:
+              if (direction == 1){
+                if (random < 5)
+                  if (!collision_with(player))
+                    next_action = MOVE_RIGHT;
+                  else
+                    next_action = PUNCH_MID;
+                else
+                  next_action = PUNCH_MID;
+              }else if (random < 5)
+                if (!collision_with(player))
+                  next_action = MOVE_LEFT;
+                else
+                  next_action = PUNCH_MID;
+              else
+                if (position <= 14)
+                  next_action = MOVE_RIGHT;
+              break;
+            case MOVE_RIGHT:
+              if (direction == 1){
+                if (random < 5)
+                  if (!collision_with(player))
+                    next_action = MOVE_RIGHT;
+                  else
+                    next_action = PUNCH_MID;
+                else
+                  if (position >= -14)
+                    next_action = MOVE_LEFT;
+                break;
+              }else if (random < 5)
+                if (!collision_with(player))
+                  next_action = MOVE_LEFT;
+                else
+                  next_action = PUNCH_MID;
               else
                 next_action = PUNCH_MID;
-            else
-              if (position <= 14)
-                next_action = MOVE_RIGHT;
-            break;
-          case MOVE_RIGHT:
-            if (random < 5)
-              if (!collision_with(player))
-                next_action = MOVE_LEFT;
+              break;
+            case PUNCH_UP:
+              if (random < 9)
+                next_action = BLOCK_UP;
               else
                 next_action = PUNCH_MID;
-            else
-              next_action = PUNCH_MID;
-            break;
-          case PUNCH_UP:
-            if (random < 9)
-              next_action = BLOCK_UP;
-            else
-              next_action = PUNCH_MID;
-            break;
-          case PUNCH_MID:
-            if (random < 9)
-              next_action = BLOCK_MID;
-            else
+              break;
+            case PUNCH_MID:
+              if (random < 9)
+                next_action = BLOCK_MID;
+              else
+                next_action = PUNCH_DOWN;
+              break;
+            case PUNCH_DOWN:
+              if (random < 9)
+                next_action = BLOCK_DOWN;
+              else
+                next_action = PUNCH_UP;
+              break;
+            case BLOCK_UP:
               next_action = PUNCH_DOWN;
-            break;
-          case PUNCH_DOWN:
-            if (random < 9)
-              next_action = BLOCK_DOWN;
-            else
+              break;
+            case BLOCK_MID:
               next_action = PUNCH_UP;
-            break;
-          case BLOCK_UP:
-            next_action = PUNCH_DOWN;
-            break;
-          case BLOCK_MID:
-            next_action = PUNCH_UP;
-            break;
-          case BLOCK_DOWN:
-            next_action = PUNCH_MID;
-            break;
+              break;
+            case BLOCK_DOWN:
+              next_action = PUNCH_MID;
+              break;
+          }
         }
       }
 
@@ -256,12 +288,26 @@ namespace octet{
         if (next_action < FINISHING)
           switch (n_action){
           case MOVE_LEFT:
-            if (position <= 14 && random < 2)
+            if (direction == 1){
+              if (position >= -14 && random < 2)
+                next_action = MOVE_LEFT;
+              else
+                next_action = BLOCK_MID;
+            }else if (position <= 14 && random < 2)
               next_action = MOVE_RIGHT;
+            else
+              next_action = BLOCK_MID;
             break;
           case MOVE_RIGHT:
-            if (position <= 14 && random < 2)
+            if (direction == 1){
+              if (position >= -14 && random < 2)
+                next_action = MOVE_LEFT;
+              else
+                next_action = BLOCK_MID;
+            }else if (position <= 14 && random < 2)
               next_action = MOVE_RIGHT;
+            else
+              next_action = BLOCK_MID;
             break;
           case PUNCH_UP:
             next_action = BLOCK_UP;
@@ -288,11 +334,23 @@ namespace octet{
         if (next_action < FINISHING)
           switch (n_action){
           case MOVE_LEFT:
-            if (position <= 14)
+            if (direction == 1){
+              if (!collision_with(player))
+                next_action = MOVE_RIGHT;
+              else
+                next_action = PUNCH_MID;
+            }else if (position <= 14)
               next_action = MOVE_RIGHT;
+            else
+              next_action = BLOCK_MID;
             break;
           case MOVE_RIGHT:
-            if (!collision_with(player))
+            if (direction == 1){
+              if (position >= -14)
+                next_action = MOVE_LEFT;
+              else
+                next_action = BLOCK_MID;
+            }else if (!collision_with(player))
               next_action = MOVE_LEFT;
             else
               next_action = PUNCH_MID;
@@ -322,6 +380,8 @@ namespace octet{
         bool hurted = false;
 
         prev_action = next_action;
+
+        if (life <= 0) next_action = DEAD;
 
         switch (next_action){
         case MOVE_LEFT:
