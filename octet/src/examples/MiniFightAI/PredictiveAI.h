@@ -82,8 +82,7 @@ namespace octet{
           printf("\n");
         }
     };
-
-
+    
     bool operator==(const SequenceInput& a, const SequenceInput& b){
       if (a.get_size() != b.get_size()) return false;
   
@@ -275,6 +274,10 @@ namespace octet{
         }
         cur_sequence.set_size(temp_size);
         return prediction;
+      }
+
+      void print_nGrams(){
+
       }
     };
 

@@ -40,7 +40,7 @@ namespace octet{
       actions next_action;
       actions next_next_action;
       
-      //Attack functions
+      /// @brief This private function will punch to the enemy in a given height. It will reduce own player's energy
       bool punch(height level, Puppet& enemy){
         energy -= 10;
         if (energy < 0) energy = 0;
@@ -51,18 +51,24 @@ namespace octet{
         return false;
       }
 
+      /// @brief This private function is called when this player has been hitted by the enemy. Here it will reduce
+      /// player's life proportionally to the enemy's energy
       void ouch(height level, Puppet& enemy){
         energy += 2;
+        if (energy > 100) energy = 100;
         life -= static_cast<int> (life_damage*enemy.get_energy()*0.01f);
         puppet_instance->set_material(materials[10 + ((level == HEIGHT_UP) ? 0 : 1)]);
       }
 
+      /// @brief This private function is called when this player has been hitted by the enemy. Here it will reduce
+      /// player's life proportionally to the enemy's energy
       void block(height level){
         energy += 1;
+        if (energy > 100) energy = 100;
         puppet_instance->set_material(materials[6 + (int)level]);
       }
 
-      //Still!
+      /// @brief This function tells the puppet to stay still 
       void still(){
         if (life>0)
           puppet_instance->set_material(materials[0]);
@@ -70,6 +76,7 @@ namespace octet{
           puppet_instance->set_material(materials[11]);
       }
 
+      /// @brief This function is used to initialize the materials of the player
       void init_materials(){
         dynarray<ref<image>> images;
 
@@ -145,9 +152,11 @@ namespace octet{
       }
 
     public:
+      /// @brief Default constructor
       Puppet() : next_action(NONE_ACTION), next_next_action(NONE_ACTION) {}
-
-      void init(ref<visual_scene> n_game_scene, int n_direction = 1, material* n_material = nullptr){
+      
+      /// @brief Init function, it will initializate the puppet with a given direction
+      void init(ref<visual_scene> n_game_scene, int n_direction = 1){
         game_scene = n_game_scene;
         direction = n_direction; 
         text = 0;
@@ -167,23 +176,43 @@ namespace octet{
 
       }
 
-      //movement actions      
+      /// @brief This function will move the character to the left
+      /// Note: This function will not check if the movement is possible, therefore
+      /// before sending the action "move_left" is important to check if the movement it's possible
+      /// this function will update an internal position value and the graphic representation of the model
       void move_left(){
         node->translate(vec3(-1.0f, 0.0f, 0.0f));
         puppet_instance->set_material(materials[1]);
         position -= 1;
       }
 
+      /// @brief This function will move the character to the right
+      /// Note: This function will not check if the movement is possible, therefore
+      /// before sending the action "move_right" is important to check if the movement it's possible
+      /// this function will update an internal position value and the graphic representation of the model
       void move_right(){
         node->translate(vec3(1.0f, 0.0f, 0.0f));
         puppet_instance->set_material(materials[2]);
         position += 1;
       }
 
+      /// @brief This will set the life damage that this puppet will do
       void set_life_damage(int n){
         life_damage = n;
       }
 
+      /// @brief This function returns the current life of the player. It's expected to be between 0 and 100, but beware
+      int get_life(){
+        return life;
+      }
+
+      /// @brief This function returns the current energy of the player. It's expected to be between 0 and 100, but beware
+      int get_energy(){
+        return energy;
+      }
+
+      /// @brief This function receives a parameter t (expected to be from 0 to 1) and updates the position
+      /// of the puppet by a given intro animation
       void animate_intro(float t){
         t = t*t*t * (t * (6.0f * t - 15.0f) + 10.0f);
         node->access_nodeToParent().loadIdentity();
@@ -193,12 +222,14 @@ namespace octet{
         node->rotate(direction * (-45) * (1 - t), vec3(0, 0, 1));
       }
 
+      /// @brief This function will be used to change the texture of the puppet (used to preload the textures) 
       void change_text(){
         puppet_instance->set_material(materials[text]);
         ++text;
         if (text > 11) text = 0;
       }
 
+      /// @brief This will be used to reset the puppet for a new match!
       void reset_puppet(){
         life = 100;
         energy = 50;
@@ -208,18 +239,12 @@ namespace octet{
         position = -5 * direction;
       }
 
-      int get_life(){
-        return life;
-      }
-
-      int get_energy(){
-        return energy;
-      }
-      
+      /// @brief This function inputs a new action for the player
       void input_action(actions n_action){
         next_action = n_action;
       }
 
+      /// @brief This method will obtain a random movement for the current puppet. It needs the opponent, to check collisions
       actions random_action(Puppet& player){
         if (next_action >= FINISHING)
           return next_action;
@@ -241,6 +266,7 @@ namespace octet{
         }
       }
 
+      /// @brief This method is the AI agent that will react to an input. This is the balanced (or clever) version
       void AI_reaction_balanced(actions n_action, Puppet& player, int distance_treshold = 4){
         int random = random_gen.get(0, 100);
 
@@ -410,6 +436,7 @@ namespace octet{
         }
       }
 
+      /// @brief This method is the AI agent that will react to an input. This version will only block!
       void AI_reaction_defense(actions n_action, Puppet& player){
         int random = random_gen.get(0, 10);
         if (next_action < FINISHING)
@@ -457,6 +484,7 @@ namespace octet{
         }
       }
 
+      /// @brief This method is the AI agent that will react to an input. This version will try to mimic the opponent.
       void AI_reaction_mimic(actions n_action, Puppet& player){
         if (next_action < FINISHING)
           switch (n_action){
@@ -503,6 +531,8 @@ namespace octet{
         }
       }
 
+      /// @brief This method will execute and update the action that currently needs to fix.
+      /// It may behave differently depending on what's the direction of the player
       bool execute_action(Puppet& enemy){
         bool hurted = false;
 
@@ -573,16 +603,20 @@ namespace octet{
         return hurted;
       }
 
+      /// @brief This method will return the current position of the puppet
       int get_position(){
         return position + (next_action == MOVE_RIGHT ? 1 : next_action == MOVE_LEFT? -1 : 0);
       }
 
+      /// @brief This function is used to detect collisions with other players
       bool collision_with(Puppet& enemy){
         int distance = position - enemy.get_position();
         if (distance < 0) distance *= -1;
         return distance < 4;
       }
 
+      /// @brief This function is to check if this player is blocking in a given height.
+      /// If it's not blocking it will send an 'ouch' event to the player (this changes depending if it's left or right player)
       bool is_blocking(height attack_height){
         bool blocked = false;
         if (direction == 1)
@@ -598,10 +632,12 @@ namespace octet{
         return blocked;
       }
 
+      /// @brief This function will return true if the player is finishing an action
       bool is_finishing(){
         return next_action >= FINISHING;
       }
 
+      /// @brief This function will return the next action of this player
       actions get_action(){
         return next_action;
       }
