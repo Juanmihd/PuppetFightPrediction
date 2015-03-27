@@ -27,6 +27,7 @@ namespace octet{
       int direction;
       int position;
       int life;
+      int energy;
       int life_damage;
       actions prev_action;
       actions next_action;
@@ -34,6 +35,8 @@ namespace octet{
       
       //Attack functions
       bool punch(height level, Puppet& enemy){
+        energy -= 15;
+        if (energy < 0) energy = 0;
         puppet_instance->set_material(materials[3 + (int)level]);
         if (collision_with(enemy)){
           return (!enemy.is_blocking(level));
@@ -41,8 +44,8 @@ namespace octet{
         return false;
       }
 
-      void ouch(height level){
-        life -= life_damage;
+      void ouch(height level, Puppet& enemy){
+        life -= life_damage*enemy.get_energy()*0.01f;
         puppet_instance->set_material(materials[10 + ((level == HEIGHT_UP) ? 0 : 1)]);
       }
 
@@ -180,6 +183,7 @@ namespace octet{
 
       void reset_puppet(){
         life = 100;
+        energy = 50;
         life_damage = 10;
         node->access_nodeToParent().loadIdentity();
         node->translate(vec3(direction*-5.0f, 1.99f, -199.9f));
@@ -188,6 +192,10 @@ namespace octet{
 
       int get_life(){
         return life;
+      }
+
+      int get_energy(){
+        return energy;
       }
       
       void input_action(actions n_action){
@@ -201,12 +209,12 @@ namespace octet{
           return static_cast<actions> (random_gen.get(0, 8));
       }
 
-      void AI_reaction_balanced(actions n_action, Puppet& player, int distance_treshold = 7){
-        int random = random_gen.get(0, 10);
+      void AI_reaction_balanced(actions n_action, Puppet& player, int distance_treshold = 4){
+        int random = random_gen.get(0, 100);
 
         int distance = math::abs(position - player.get_position());
         
-        if (distance > distance_treshold){
+        if (distance >= distance_treshold){
           if (direction == 1)
             next_action = MOVE_RIGHT;
           else
@@ -217,14 +225,21 @@ namespace octet{
             switch (n_action){
             case MOVE_LEFT:
               if (direction == 1){
-                if (random < 5)
+                if (energy == 100)
+                  if (!collision_with(player))
+                    next_action = MOVE_RIGHT;
+                  else
+                    next_action = PUNCH_MID;
+                else
+                if (random* energy*0.01 < 50)
                   if (!collision_with(player))
                     next_action = MOVE_RIGHT;
                   else
                     next_action = PUNCH_MID;
                 else
                   next_action = PUNCH_MID;
-              }else if (random < 5)
+              }
+              else if (random * energy*0.01 < 50)
                 if (!collision_with(player))
                   next_action = MOVE_LEFT;
                 else
@@ -235,7 +250,7 @@ namespace octet{
               break;
             case MOVE_RIGHT:
               if (direction == 1){
-                if (random < 5)
+                if (random * energy*0.01 < 50)
                   if (!collision_with(player))
                     next_action = MOVE_RIGHT;
                   else
@@ -244,7 +259,15 @@ namespace octet{
                   if (position >= -14)
                     next_action = MOVE_LEFT;
                 break;
-              }else if (random < 5)
+              }
+              else
+                if (energy == 100)
+                  if (!collision_with(player))
+                    next_action = MOVE_LEFT;
+                  else
+                    next_action = PUNCH_MID;
+              else
+                if(random * energy*0.01 < 50)
                 if (!collision_with(player))
                   next_action = MOVE_LEFT;
                 else
@@ -253,33 +276,86 @@ namespace octet{
                 next_action = PUNCH_MID;
               break;
             case PUNCH_UP:
-              if (random < 9)
+              if (energy >= 90)
+                next_action = PUNCH_MID;
+              else if (energy <= 20)
+                next_action = BLOCK_UP;
+              else if (random * life*0.01f*energy*0.01 < 50)
                 next_action = BLOCK_UP;
               else
                 next_action = PUNCH_MID;
               break;
             case PUNCH_MID:
-              if (random < 9)
+              if (energy >= 90)
+                next_action = PUNCH_MID;
+              else if (energy <= 20)
+                next_action = BLOCK_MID;
+              else if (random * life*0.01f*energy*0.01 < 50)
                 next_action = BLOCK_MID;
               else
                 next_action = PUNCH_DOWN;
               break;
             case PUNCH_DOWN:
-              if (random < 9)
+              if (energy >= 90)
+                next_action = PUNCH_MID;
+              else if (energy <= 20)
+                next_action = BLOCK_DOWN;
+              else if (random * life*0.01f*energy*0.01 < 50)
                 next_action = BLOCK_DOWN;
               else
-                next_action = PUNCH_UP;
+                next_action = PUNCH_MID;
               break;
             case BLOCK_UP:
-              next_action = PUNCH_DOWN;
+              if (energy <= 20){
+                if (direction){
+                  if (position >= -14)
+                    next_action = MOVE_LEFT;
+                  else next_action = BLOCK_UP;
+                }
+                else{
+                  if (position <= 14)
+                    next_action = MOVE_RIGHT;
+                  else next_action = BLOCK_UP;
+                }
+              }
+              else if (energy >= 90)
+                next_action = PUNCH_DOWN;
+              else next_action = PUNCH_DOWN;
               break;
             case BLOCK_MID:
-              next_action = PUNCH_UP;
+              if (energy <= 20){
+                if (direction == 1){
+                  if (position >= -14)
+                    next_action = MOVE_LEFT;
+                  else next_action = BLOCK_UP;
+                }
+                else{
+                  if (position <= 14)
+                    next_action = MOVE_RIGHT;
+                  else next_action = BLOCK_UP;
+                }
+              }
+              else if (energy >= 90)
+                next_action = PUNCH_UP;
+              else next_action = PUNCH_UP;
               break;
             case BLOCK_DOWN:
-              next_action = PUNCH_MID;
+              if (energy <= 20){
+                if (direction==1){
+                  if (position >= -14)
+                    next_action = MOVE_LEFT;
+                  else next_action = BLOCK_UP;
+                }
+                else{
+                  if (position <= 14)
+                    next_action = MOVE_RIGHT;
+                  else next_action = BLOCK_UP;
+                }
+              }
+              else next_action = PUNCH_MID;
               break;
           }
+          
         }
       }
 
@@ -379,6 +455,9 @@ namespace octet{
       bool execute_action(Puppet& enemy){
         bool hurted = false;
 
+        energy += 1;
+        if (energy > 100) energy = 100;
+
         prev_action = next_action;
 
         if (life <= 0) next_action = DEAD;
@@ -417,13 +496,13 @@ namespace octet{
           next_action = NONE_ACTION;
           break;
         case OUCH_UP:
-          ouch(HEIGHT_UP);
+          ouch(HEIGHT_UP, enemy);
           hurted = true;
           next_action = NONE_ACTION;
           break;
         case OUCH_MID:
         case OUCH_DOWN:
-          ouch(HEIGHT_MID);
+          ouch(HEIGHT_MID, enemy);
           hurted = true;
           next_action = NONE_ACTION;
           break;

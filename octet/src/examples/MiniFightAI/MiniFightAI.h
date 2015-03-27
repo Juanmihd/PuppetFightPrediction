@@ -28,6 +28,7 @@ namespace octet {
       int player_two_AI;
       //This contains the information whereas player one won or lost
       bool player_one_won;
+      bool mid_lapse_done;
       //This contains the information of the AI (1-3)
       int type_one_AI;
       //This contains the information of the AI (1-3)
@@ -43,6 +44,7 @@ namespace octet {
       //This two counters are used to control the animation in the intro and the distance between the actions
       std::chrono::time_point<std::chrono::system_clock> previous_action;
       std::chrono::time_point<std::chrono::system_clock> cur_animation;
+      std::chrono::time_point<std::chrono::system_clock> click_time;
       // scene for drawing box
       ref<visual_scene> app_scene;
       //This contains the User Interface and the stage
@@ -72,6 +74,7 @@ namespace octet {
         player_one_AI = player_two_AI = 0;
         cheating = false;
         player_one_won = false;
+        mid_lapse_done = false;
         //Select the starting mode of the AI (mode 1 mimic)
         type_two_AI = type_one_AI = 1;
         //Set up the scene with default camera and lights
@@ -113,10 +116,12 @@ namespace octet {
         player_two_AI = value;
       }
 
+      /// @brief This will be called when the buttons on type of AI of player 1 are clicked
       void button_p1_type(int value){
         type_one_AI = value;
       }
 
+      /// @brief This will be called when the buttons on type of AI of player 2 are clicked
       void button_p2_type(int value){
         type_two_AI = value;
       }
@@ -137,7 +142,7 @@ namespace octet {
       /// @brief This will be called when the speed buttons are pressed
       void button_speed(float inc){
         time_lapse += inc;
-        if (time_lapse < 0.05f) time_lapse = 0.05f;
+        if (time_lapse < 0.1f) time_lapse = 0.1f;
         else if (time_lapse > 1.0f) time_lapse = 1.0f;
         half_time_lapse = time_lapse * 0.5f;
       }
@@ -162,71 +167,118 @@ namespace octet {
             if (rx <= 0.42f){
               if (rx < 0.19f){
                 if (rx > 0.12f){
-                  if (ry >= 0.72f && ry <= 0.78f)
+                  if (ry >= 0.72f && ry <= 0.78f){
                     button_p1_ai(0);
-                  else if (ry >= 0.8f && ry <= 0.85f)
+                    stage_puppet.set_button_posx(0, 2);
+                  }
+                  else if (ry >= 0.8f && ry <= 0.85f){
                     button_p1_type(1);
-                  else if (ry >= 0.88f && ry <= 0.94f)
+                    stage_puppet.set_button_posx(2, 2);
+                  }
+                  else if (ry >= 0.88f && ry <= 0.94f){
                     predictiveAI_one.set_dimension(1);
+                    stage_puppet.set_button_posx(4, 2);
+                  }
                 }
               }
               else if (rx < 0.35f){
                 if (rx > 0.236f && rx < 0.30f){
-                  if (ry >= 0.72f && ry <= 0.78f)
+                  if (ry >= 0.72f && ry <= 0.78f){
                     button_p1_ai(1);
-                  else if (ry >= 0.8f && ry <= 0.85f)
+                    stage_puppet.set_button_posx(0, 1);
+                  }
+                  else if (ry >= 0.8f && ry <= 0.85f){
                     button_p1_type(2);
-                  else if (ry >= 0.88f && ry <= 0.94f)
+                    stage_puppet.set_button_posx(2, 1);
+                  }
+                  else if (ry >= 0.88f && ry <= 0.94f){
                     predictiveAI_one.set_dimension(4);
+                    stage_puppet.set_button_posx(4, 1);
+                  }
                 }
               }
               else if (rx < 0.42f){
-                if (ry >= 0.72f && ry <= 0.78f)
+                if (ry >= 0.72f && ry <= 0.78f){
+                  stage_puppet.set_button_posx(0, 0);
                   button_p1_ai(-1);
-                else if (ry >= 0.8f && ry <= 0.85f)
+                }
+                else if (ry >= 0.8f && ry <= 0.85f){
                   button_p1_type(3);
-                else if (ry >= 0.88f && ry <= 0.94f)
+                  stage_puppet.set_button_posx(2, 0);
+                }
+                else if (ry >= 0.88f && ry <= 0.94f){
                   predictiveAI_one.resetAI();
+                  stage_puppet.press_forget1_button(true);
+                  click_time = std::chrono::system_clock::now();
+                }
               }
             }
             else if(rx >= 0.58f){
               if (rx > 0.81f){
                 if (rx < 0.88f){
-                  if (ry >= 0.72f && ry <= 0.78f)
+                  if (ry >= 0.72f && ry <= 0.78f){
                     button_p2_ai(-1);
-                  else if (ry >= 0.8f && ry <= 0.85f)
+                    stage_puppet.set_button_posx(1, 2);
+                  }
+                  else if (ry >= 0.8f && ry <= 0.85f){
                     button_p2_type(3);
-                  else if (ry >= 0.88f && ry <= 0.94f)
+                    stage_puppet.set_button_posx(3, 2);
+                  }
+                  else if (ry >= 0.88f && ry <= 0.94f){
                     predictiveAI.resetAI();
+                    stage_puppet.press_forget2_button(true);
+                    click_time = std::chrono::system_clock::now();
+                  }
                 }
               }
               else if (rx > 0.65f){
                 if (rx < 0.764f && rx > 0.7f){
-                  if (ry >= 0.72f && ry <= 0.78f)
+                  if (ry >= 0.72f && ry <= 0.78f){
                     button_p2_ai(1);
-                  else if (ry >= 0.8f && ry <= 0.85f)
+                    stage_puppet.set_button_posx(1, 1);
+                  }
+                  else if (ry >= 0.8f && ry <= 0.85f){
                     button_p2_type(2);
-                  else if (ry >= 0.88f && ry <= 0.94f)
+                    stage_puppet.set_button_posx(3, 1);
+                  }
+                  else if (ry >= 0.88f && ry <= 0.94f){
                     predictiveAI.set_dimension(4);
+                    stage_puppet.set_button_posx(5, 1);
+                  }
                 }
               }
               else if (rx > 0.58f){
-                if (ry >= 0.72f && ry <= 0.78f)
+                if (ry >= 0.72f && ry <= 0.78f){
                   button_p2_ai(0);
-                else if (ry >= 0.8f && ry <= 0.85f)
+                  stage_puppet.set_button_posx(1, 0);
+                }
+                else if (ry >= 0.8f && ry <= 0.85f){
                   button_p2_type(1);
-                else if (ry >= 0.88f && ry <= 0.94f)
+                  stage_puppet.set_button_posx(3, 0);
+                }
+                else if (ry >= 0.88f && ry <= 0.94f){
                   predictiveAI.set_dimension(1);
+                  stage_puppet.set_button_posx(5, 0);
+                }
               }
             }
             else{
-              if (ry >= 0.77f && ry <= 0.83f)
+              if (ry >= 0.77f && ry <= 0.83f){
                 reset_game();
+                stage_puppet.press_reset_button(true);
+                click_time = std::chrono::system_clock::now();
+              }
               else if (ry >= 0.88f && ry <= 0.94f)
-                if (rx > 0.5f)
+                if (rx > 0.5f){
                   button_speed(-0.05f);
-                else
+                  stage_puppet.press_plus_button(true);
+                  click_time = std::chrono::system_clock::now();
+                }
+                else{
                   button_speed(0.05f);
+                  stage_puppet.press_minus_button(true);
+                  click_time = std::chrono::system_clock::now();
+                }
               else
                 button_cheating();
             }
@@ -330,8 +382,8 @@ namespace octet {
       }
 
       /// @brief This function will be called on the half of each 'game-frame'
-      /// This 
       void mid_frame(){
+        mid_lapse_done = true;
         if (_game_state == _PLAYING){
           //Predict actions
           actions predicted_action = static_cast<actions> (predictiveAI.predict());
@@ -395,7 +447,23 @@ namespace octet {
         }
       }
 
+      /// @brief This function will be called on the end of each 'game-frame'
       void last_frame(){
+        //Be sure that the mid lapse happened!
+        if (!mid_lapse_done)
+          mid_frame();
+        mid_lapse_done = false;
+        //Reset buttons
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::duration<float> elapsed_seconds = now - click_time;
+        if (elapsed_seconds.count() > 0.05f){
+          stage_puppet.press_reset_button(false);
+          stage_puppet.press_plus_button(false);
+          stage_puppet.press_minus_button(false);
+          stage_puppet.press_forget1_button(false);
+          stage_puppet.press_forget2_button(false);
+        }
+        // Mid frame (small animation + prediction)
         if (_game_state == _PLAYING){
           //Memorize actions
           if (player_one.get_action() != NONE_ACTION && player_one.get_action() < FINISHING)
@@ -427,14 +495,15 @@ namespace octet {
         if (player_two.execute_action(player_one)){
           stage_puppet.update_lifes(player_one.get_life(), player_two.get_life());
         }
+
+        stage_puppet.update_energies(player_one.get_energy(), player_two.get_energy());
       }
 
-      /// this is called to draw the world
+      /// @brief This is called to draw the world
       void draw_world(int x, int y, int w, int h) {
         int vx = 0, vy = 0;
         get_viewport_size(vx, vy);
         app_scene->begin_render(vx, vy);
-
         // obtain input from mouse and keyboard
         mouse();
         if (_game_state == _PLAYING)

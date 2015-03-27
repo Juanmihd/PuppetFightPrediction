@@ -37,7 +37,7 @@ namespace octet { namespace shaders {
       glGetProgramInfoLog(program, sizeof(buf), &length, buf);
       if (length) {
         fputs(buf, log("program errors during linking\n"));
-        printf("program errors during linking: check log\n");
+        //printf("program errors during linking: check log\n");
       } else {
         printf("linked ok\n");
       }
