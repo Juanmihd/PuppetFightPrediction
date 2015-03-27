@@ -15,39 +15,59 @@
 
 namespace octet{
   namespace PuppetFight{
+    // This will be used "as globals" for the creation of sequence and hash tables
     enum {_SIZE_SEQUENCE = 5, _NUM_ACTIONS = 9, _DEBUGGING = 1};
 
+    /// @brief This class is a simple sequence. It can receive new inputs.
+    /// This clase is made as a "queue" of four elements.
     class SequenceInput{
+      // The array that will contain the information
       std::array<int, _SIZE_SEQUENCE> sequence;
+      // The top of the queue
       int top;
+      // The size of the queue
       std::size_t size;
 
       public:
+        /// @brief This is the default constructor of the Sequence (with top in zero and size 1)
         SequenceInput() : top(0), size(1) {}
+        
+        /// @brief This is a copy constructor receiveng a given sequence
         SequenceInput(const std::array<int, _SIZE_SEQUENCE>& n_sequence) : sequence(n_sequence), top(0), size(_SIZE_SEQUENCE - 1) {}
     
+        /// @brief This is used to create a new input
+        /// The size is fixed, therefore, the queue will be always the same size
         void new_input(int input){
           sequence[top] = input;
           if (++top > _SIZE_SEQUENCE-1)
             top = 0;
         }
 
+        /// @brief Set the size of the queue
+        /// It checks if it's bigger than the available space
         void set_size(std::size_t n_size){
+          if (n_size > _SIZE_SEQUENCE) size = n_size;
           size = n_size;
         }
 
+        /// @brief Returns the size of the queue
         std::size_t get_size() const{
           return size;
         }
 
+        /// @brief It makes grow the queue.
+        /// It checks that the size of the queue doesn't exceed the capacity
         void grow_sequence(){
           ++size;
+          if (size > _SIZE_SEQUENCE) size = _SIZE_SEQUENCE;
         }
 
+        /// @brief It returns the position of the top (not the content of the top)
         std::size_t get_top() const{
           return top;
         }
 
+        /// @brief It sets the VALUE of the top (not the position!)
         void set_top(int value){
           if (top != 0)
             sequence[top - 1] = value;
@@ -55,13 +75,17 @@ namespace octet{
             sequence[_SIZE_SEQUENCE - 1] = value;
         }
 
+        /// @brief It gets the element in a given position (from the top!).
+        /// It checks that it doesn't exceed the size of the queue
         int get_element(std::size_t pos) const{
+          if (pos > size) pos = size;
           int n_pos = top - 1 - pos;
           if (n_pos < 0) 
             n_pos = _SIZE_SEQUENCE + n_pos;
           return sequence[n_pos];
         }
 
+        /// @brief This function just prints the sequence on the screen
         void print_sequence(){
           printf("Sequence: size %i: ", size);
           for (int i = 0; i < size; ++i){
@@ -74,6 +98,7 @@ namespace octet{
           printf("\n");
         }
 
+        /// @brief This is a debug printer, that will print the whole sequence and the top position
         void print_debug_all(){
           printf("Sequence: top %i and size %i\n", top, size);
           for (const int& i : sequence){
@@ -83,6 +108,7 @@ namespace octet{
         }
     };
     
+    /// @brief This is the operator == for comparison of sqeuences
     bool operator==(const SequenceInput& a, const SequenceInput& b){
       if (a.get_size() != b.get_size()) return false;
   
@@ -95,16 +121,19 @@ namespace octet{
       return equal;
     }
 
+    /// @brief This is the operator != for comparison of sequences
+    /// This has been implemented as a derivated of operator==
     bool operator!=(const SequenceInput& a, const SequenceInput& b){
       return !(a == b);
     }
 
+    /// @brief This is the class with the Hash function for the Sequence
     template <class T>
     class MyHash;
-
     template <> 
     class MyHash<SequenceInput>{
     public:
+      /// @brief This is the hash function of a sequence
       std::size_t operator()(SequenceInput const& s) const{
         std::size_t hash_key = 0;
         std::size_t size_sequence = s.get_size();
@@ -118,9 +147,16 @@ namespace octet{
       }
     };
 
+    /// @brief This class contains the whole information of the ngram prediction. 
+    /// Internally it works with an array for the 1gram, a hash table for the
+    /// sum of the total ocurrencies of a n-1 sequence, and the ngram
+    /// This last ngram is made as well as a hash table
     class PredictiveAI{
+      // This is the total dimension of the ngram
       std::size_t dimension_nGram;
+      // This is the treshold used for an hierarchic ngram approach
       std::size_t treshold;
+      // This is the current sequence (used to predict and to store)
       SequenceInput cur_sequence;
       // The 1Gram is an array
       std::array<int, 15> oneGram;
@@ -129,43 +165,51 @@ namespace octet{
       // The rest of the nGram representation is stored in a Hash table.
       std::unordered_map<SequenceInput, unsigned int, MyHash<SequenceInput>> nGram_sums;
 
+      /// @brief This will reset the information of the ngrams. It's kept privated.
+      /// To reset the AI from outside, use resetAI()
       void reset_n_gram(){
         for (int i = 0; i < oneGram.size(); ++i){
           oneGram[i] = 0;
         }
+        nGram.clear();
+        nGram_sums.clear();
       }
 
     public:
+      /// @brief Default constructor of PredictiveAI
       PredictiveAI() : dimension_nGram(4), treshold(6){
         reset_n_gram();
       }
 
+      /// @brief Constructor with the size of the ngram
       PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram), treshold(6){
         reset_n_gram();
       }
 
+      /// @brief This function will be used to initialize the ngram (with 0 values as sequence)
       void init(std::size_t size){
-        cur_sequence.set_size(4);
-        cur_sequence.new_input(0);
-        cur_sequence.new_input(0);
-        cur_sequence.new_input(0);
-        cur_sequence.new_input(0);
+        cur_sequence.set_size(size);
+        for (std::size_t i = 0; i != size; ++i){
+          cur_sequence.new_input(0);
+        }
       }
 
+      /// @brief This will set the dimension of the ngram.
       void set_dimension(std::size_t n_dimension){
         dimension_nGram = n_dimension;
       }
 
+      /// @brief This function will reset the AI and make it forget all stored information
       void resetAI(){
         reset_n_gram();
-        nGram.clear();
-        nGram_sums.clear();
         cur_sequence.new_input(0);
         cur_sequence.new_input(0);
         cur_sequence.new_input(0);
         cur_sequence.new_input(0);
       }
 
+      /// @brief This method is used to add a new user input. 
+      /// It updates the current sequence and the ngram information
       void new_input(std::size_t input){
         int temp_size = cur_sequence.get_size();
         //n-gram-sums! (note the < instead of <= )
@@ -196,10 +240,13 @@ namespace octet{
         cur_sequence.set_size(temp_size);
       }
 
+      /// @brief This method give the last input received
       int get_last(){
         return cur_sequence.get_element(0);
       }
 
+      /// @brief This method will obtain a prediction with a hierarchic approach
+      /// It will use the dimension of the gram, so it can be 1..ngram!
       int predict(){
         //Debugging
         if (_DEBUGGING == 0){
@@ -276,6 +323,8 @@ namespace octet{
         return prediction;
       }
 
+      /// @brief This is used to print all the current information of the ngram
+      /// This method will ignore the 'sum' of the (n-1)gram values!
       void print_nGrams(){
 
       }

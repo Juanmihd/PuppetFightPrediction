@@ -69,7 +69,8 @@ namespace octet {
         //Create a new scene
         app_scene =  new visual_scene();
         //Init the predictive AI
-        predictiveAI.init(4); 
+        predictiveAI.init(4);
+        predictiveAI_one.init(4);
         //Init some booleans, for victory, AI, and chea
         player_one_AI = player_two_AI = 0;
         cheating = false;
