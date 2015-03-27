@@ -1,4 +1,4 @@
-//
+// Juanmi Huertas
 // This file contain two enums (with actions and heights) and the class Puppet.
 // The class puppet will be responsible of taking care of the control of the caracters
 //

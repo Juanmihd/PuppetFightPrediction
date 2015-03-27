@@ -1,5 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
+// Juanmi Huertas
 // MiniFightAI is the name of the whole app. 
 // This app will contain two players, the user interface.
 // The player can be playable or AI controlled! 

@@ -1,4 +1,4 @@
-//
+// Juanmi Huertas
 // This class will contain the user interface to be drawn
 //
 // It will be a set of openGL boxes, representing the stage of the puppet show
@@ -8,7 +8,10 @@
 
 namespace octet {
   namespace PuppetFight{
+    /// @brief This class contains the information of the StageUI. 
+    // It contains as well the "aesthetics" of the UI, not the logic.
     class StageUI{
+      //Scene nodes with different elements
       ref<scene_node> bottom;
       ref<scene_node> bottom_cover;
       ref<scene_node> background;
@@ -18,23 +21,30 @@ namespace octet {
       ref<scene_node> life_player_two;
       ref<scene_node> energy_player_one;
       ref<scene_node> energy_player_two;
+      //Array with all the button's scene nodes
       dynarray<ref<scene_node>> button_on;
+      //Materials for the life and energy bars
       ref<material> red;
       ref<material> purple;
       ref<material> blue;
       ref<material> blue2;
+      //Mesh instances of the background and the bars, to be able to change the material
       ref<mesh_instance> background_mesh;
       ref<mesh_instance> mesh_player_one;
       ref<mesh_instance> mesh_player_two;
       ref<mesh_instance> mesh_energy_player_one;
       ref<mesh_instance> mesh_energy_player_two;
+      //Visual scene of the game.
       ref<visual_scene> game_scene;
+      //Array with all the materials for the background
       dynarray<ref<material>> background_materials;
-
+      //Information regarding if it's the first time that the game loads of it has already STARTED
       bool started;
+      //Information to where to 'display' the pressed button
       float posx[3];
       float posy[3];
     public:
+      ///@brief Default constructor
       StageUI(){}
 
       void init(ref<visual_scene> n_game_scene){

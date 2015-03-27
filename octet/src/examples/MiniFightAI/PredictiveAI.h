@@ -1,4 +1,4 @@
-//
+// Juanmi Huertas
 // This is the clas with the container of the predictive AI
 // This will be highly parametrizable to be able to use for different kind of applications
 // It will be able to gather inputs, and produce a predicted inpute
