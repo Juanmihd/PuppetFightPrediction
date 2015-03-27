@@ -291,7 +291,7 @@ namespace octet {
         //Player 1
         if (!player_one.is_finishing()){
           if (player_one_AI == -1){
-            actions action = player_one.random_action();
+            actions action = player_one.random_action(player_two);
             if (action == MOVE_RIGHT){
               if (!player_one.collision_with(player_two)){
                 player_one.input_action(MOVE_RIGHT);
@@ -403,7 +403,7 @@ namespace octet {
             }
           }
           else if (player_two_AI == -1){ // RANDOM MOVEMENT!
-            actions action = player_two.random_action();
+            actions action = player_two.random_action(player_one);
             if (action == MOVE_LEFT){
               if (!player_two.collision_with(player_one)){
                 player_two.input_action(MOVE_LEFT);

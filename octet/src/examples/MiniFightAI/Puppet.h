@@ -220,11 +220,25 @@ namespace octet{
         next_action = n_action;
       }
 
-      actions random_action(){
+      actions random_action(Puppet& player){
         if (next_action >= FINISHING)
           return next_action;
-        else
-          return static_cast<actions> (random_gen.get(0, 8));
+        else{
+          actions action = static_cast<actions> (random_gen.get(0, 8));
+          if (direction == 1){
+            if (collision_with(player) && action == MOVE_RIGHT)
+              action = MOVE_LEFT;
+            else if (position >= -14 && action == MOVE_LEFT)
+              action = MOVE_RIGHT;
+          }
+          else{
+            if (collision_with(player) && action == MOVE_LEFT)
+              action = MOVE_RIGHT;
+            else if (position <= 14 && action == MOVE_RIGHT)
+              action = MOVE_LEFT;
+          }
+          return action;
+        }
       }
 
       void AI_reaction_balanced(actions n_action, Puppet& player, int distance_treshold = 4){
@@ -233,10 +247,28 @@ namespace octet{
         int distance = math::abs(position - player.get_position());
         
         if (distance >= distance_treshold){
-          if (direction == 1)
-            next_action = MOVE_RIGHT;
-          else
-            next_action = MOVE_LEFT;
+            if (energy >= 30){
+              if (direction == 1)
+                if (!collision_with(player))
+                  next_action = MOVE_RIGHT;
+                else
+                  next_action = PUNCH_MID;
+              else
+                if (!collision_with(player))
+                  next_action = MOVE_LEFT;
+                else
+                  next_action = PUNCH_MID;
+            }
+            else{
+              if (direction == 1)
+                if (position >= -14)
+                  next_action = MOVE_LEFT;
+                else next_action = BLOCK_UP;
+              else
+                if (position <= 14)
+                  next_action = MOVE_RIGHT;
+                else next_action = BLOCK_UP;
+            }
         }
         else{
           if (next_action < FINISHING)
@@ -384,22 +416,22 @@ namespace octet{
           switch (n_action){
           case MOVE_LEFT:
             if (direction == 1){
-              if (position >= -14 && random < 2)
+              if (position >= -14 && random < 5)
                 next_action = MOVE_LEFT;
               else
                 next_action = BLOCK_MID;
-            }else if (position <= 14 && random < 2)
+            }else if (position <= 14 && random < 5)
               next_action = MOVE_RIGHT;
             else
               next_action = BLOCK_MID;
             break;
           case MOVE_RIGHT:
             if (direction == 1){
-              if (position >= -14 && random < 2)
+              if (position >= -14 && random < 5)
                 next_action = MOVE_LEFT;
               else
                 next_action = BLOCK_MID;
-            }else if (position <= 14 && random < 2)
+            }else if (position <= 14 && random < 5)
               next_action = MOVE_RIGHT;
             else
               next_action = BLOCK_MID;
