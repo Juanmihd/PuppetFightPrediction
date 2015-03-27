@@ -21,9 +21,13 @@ namespace octet {
       dynarray<ref<scene_node>> button_on;
       ref<material> red;
       ref<material> purple;
+      ref<material> blue;
+      ref<material> blue2;
       ref<mesh_instance> background_mesh;
       ref<mesh_instance> mesh_player_one;
       ref<mesh_instance> mesh_player_two;
+      ref<mesh_instance> mesh_energy_player_one;
+      ref<mesh_instance> mesh_energy_player_two;
       ref<visual_scene> game_scene;
       dynarray<ref<material>> background_materials;
 
@@ -69,7 +73,8 @@ namespace octet {
         background_materials.push_back(new material(new image("assets/AI/background_6.gif")));
 
         material* black = new material(vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        material* blue = new material(vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        blue = new material(vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        blue2 = new material(vec4(0.5f, 0.0f, 0.8f, 1.0f));
         red = new material(vec4(1.0f, 0.0f, 0.0f, 1.0f));
         purple = new material(vec4(.5f, 0.0f, .5f, 1.0f));
 
@@ -166,8 +171,10 @@ namespace octet {
         game_scene->add_mesh_instance(mesh_player_two);
         game_scene->add_mesh_instance(new mesh_instance(life_one_node_back, life_one_box_back, black));
         game_scene->add_mesh_instance(new mesh_instance(life_two_node_back, life_two_box_back, black));
-        game_scene->add_mesh_instance(new mesh_instance(energy_player_one, energy_one_box, blue));
-        game_scene->add_mesh_instance(new mesh_instance(energy_player_two, energy_two_box, blue));
+        mesh_energy_player_one = new mesh_instance(energy_player_one, energy_one_box, blue);
+        game_scene->add_mesh_instance(mesh_energy_player_one);
+        mesh_energy_player_two = new mesh_instance(energy_player_two, energy_two_box, blue);
+        game_scene->add_mesh_instance(mesh_energy_player_two);
         game_scene->add_mesh_instance(new mesh_instance(energy_one_node_back, energy_one_box_back, black));
         game_scene->add_mesh_instance(new mesh_instance(energy_two_node_back, energy_two_box_back, black));
         for (int i = 0; i < 6; ++i){
@@ -181,6 +188,7 @@ namespace octet {
       }
 
       void animate_intro(float t){
+        t = t*t;
         courtin->access_nodeToParent().loadIdentity();
         courtin->translate(vec3(0.0f, 6.0f * (1 - t) + 30.0f*t, 0.0f));
 
@@ -217,6 +225,15 @@ namespace octet {
 
 
       void update_energies(int energy1, int energy2){
+        if (energy1 >= 20)
+          mesh_energy_player_one->set_material(blue);
+        else
+          mesh_energy_player_one->set_material(blue2);
+        if (energy2 >= 20)
+          mesh_energy_player_two->set_material(blue);
+        else
+          mesh_energy_player_two->set_material(blue2);
+
         energy_player_one->access_nodeToParent().loadIdentity();
         energy_player_one->translate(vec3(-16.9f, -4.8f, 1.4f));
         energy_player_one->translate(vec3(-3.0f, 0.0f, 0.0f));

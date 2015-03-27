@@ -33,6 +33,7 @@ namespace octet{
       int direction;
       int position;
       int life;
+      int text;
       int energy;
       int life_damage;
       actions prev_action;
@@ -130,14 +131,14 @@ namespace octet{
 
           images.push_back(new image("assets/AI/Puppet2Lost.gif"));
         }
-        param_shader* param = new param_shader("shaders/default.vs", "shaders/multitexture.fs");
+
         for (int i = 0; i < 11; ++i){
-          material* new_mat = new material(vec4(1, 1, 1, 1), param);
-          new_mat->add_sampler(0, app_utils::get_atom("top"), images[2*i], new sampler());
-          new_mat->add_sampler(1, app_utils::get_atom("topmask"), images[2*i+1], new sampler());
+          material* new_mat = new material(vec4(1, 1, 1, 1), new param_shader("shaders/default.vs", "shaders/multitexture.fs"));
+          new_mat->add_sampler(0, app_utils::get_atom("topmask"), images[2 * i + 1], new sampler());
+          new_mat->add_sampler(1, app_utils::get_atom("top"), images[2*i], new sampler());
           materials.push_back(new_mat);
         }
-        material* new_mat = new material(vec4(1, 1, 1, 1), param);
+        material* new_mat = new material(vec4(1, 1, 1, 1), new param_shader("shaders/default.vs", "shaders/multitexture.fs"));
         new_mat->add_sampler(0, app_utils::get_atom("top"), images[22], new sampler());
         new_mat->add_sampler(1, app_utils::get_atom("topmask"), images[1], new sampler());
         materials.push_back(new_mat);
@@ -149,7 +150,7 @@ namespace octet{
       void init(ref<visual_scene> n_game_scene, int n_direction = 1, material* n_material = nullptr){
         game_scene = n_game_scene;
         direction = n_direction; 
-
+        text = 0;
         init_materials();
 
         mesh_box* puppet_box = new mesh_box(vec3(2, 4, 200));
@@ -184,9 +185,18 @@ namespace octet{
       }
 
       void animate_intro(float t){
+        t = t*t*t * (t * (6.0f * t - 15.0f) + 10.0f);
         node->access_nodeToParent().loadIdentity();
-        node->translate(vec3(direction*-(6.f * (1 - t) + 5.0f*t), -8.f * (1 - t) + 1.99f*t, -199.9f));
+        float a = -8.f * (1 - t) + 3.99f*t;
+        float b = 3.99f * (1 - t) + 1.98f*t;
+        node->translate(vec3(direction*-(6.f * (1 - t) + 5.0f*t), a * (1 - t) + b*t, -199.9f));
         node->rotate(direction * (-45) * (1 - t), vec3(0, 0, 1));
+      }
+
+      void change_text(){
+        puppet_instance->set_material(materials[text]);
+        ++text;
+        if (text > 11) text = 0;
       }
 
       void reset_puppet(){

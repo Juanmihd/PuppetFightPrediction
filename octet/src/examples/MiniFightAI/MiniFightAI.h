@@ -506,17 +506,26 @@ namespace octet {
         app_scene->begin_render(vx, vy);
         // obtain input from mouse and keyboard
         mouse();
-        if (_game_state == _PLAYING)
+        if (_game_state == _INTRO){
+          player_one.change_text();
+          player_two.change_text();
+        }
+        else if (_game_state == _PLAYING){
           keyboard();
+        }
         else if (_game_state == _INTRO_ANIMATION){
           //Prepare to check frames
           std::chrono::time_point<std::chrono::system_clock> now_animation = std::chrono::system_clock::now();
           std::chrono::duration<float> elapsed_seconds = now_animation - cur_animation;
           float t = 1.0f * elapsed_seconds.count() / time_animation;
-          if (t <= 1){
+          if (t <= 1.0f){
             player_one.animate_intro(t);
             player_two.animate_intro(t);
             stage_puppet.animate_intro(t);
+            /*if (t <= 0.7f){
+              player_one.change_text();
+              player_two.change_text();
+            }*/
           }
           else{
             player_one.animate_intro(1.0f);
