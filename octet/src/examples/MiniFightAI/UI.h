@@ -213,17 +213,20 @@ namespace octet {
         life_player_one->access_nodeToParent().loadIdentity();
         life_player_one->translate(vec3(-12.0f, -4.5f, 1.2f));
         life_player_one->translate(vec3(-8.0f, 0.0f, 0.0f));
+        if (life1 < 0) life1 = 0;
+        if (life1 > 100) life1 = 100;
         life_player_one->scale(vec3(life1 / 100.0f, 1.0f, 1.0f));
         life_player_one->translate(vec3(8.0f, 0.0f, 0.0f));
 
         life_player_two->access_nodeToParent().loadIdentity();
         life_player_two->translate(vec3(12.0f, -4.5f, 1.2f));
         life_player_two->translate(vec3(8.0f, 0.0f, 0.0f));
+        if (life2 < 0) life2 = 0;
+        if (life2 > 100) life2 = 100;
         life_player_two->scale(vec3(life2 / 100.0f, 1.0f, 1.0f));
         life_player_two->translate(vec3(-8.0f, 0.0f, 0.0f));
       }
-
-
+      
       void update_energies(int energy1, int energy2){
         if (energy1 >= 20)
           mesh_energy_player_one->set_material(blue);
@@ -237,15 +240,20 @@ namespace octet {
         energy_player_one->access_nodeToParent().loadIdentity();
         energy_player_one->translate(vec3(-16.9f, -4.8f, 1.4f));
         energy_player_one->translate(vec3(-3.0f, 0.0f, 0.0f));
+        if (energy1 < 0) energy1 = 0;
+        if (energy1 > 100) energy1 = 100;
         energy_player_one->scale(vec3(energy1 / 100.0f, 1.0f, 1.0f));
         energy_player_one->translate(vec3(3.0f, 0.0f, 0.0f));
 
         energy_player_two->access_nodeToParent().loadIdentity();
         energy_player_two->translate(vec3(16.9f, -4.8f, 1.4f));
         energy_player_two->translate(vec3(3.0f, 0.0f, 0.0f));
+        if (energy2 < 0) energy2 = 0;
+        if (energy2 > 100) energy2 = 100;
         energy_player_two->scale(vec3(energy2 / 100.0f, 1.0f, 1.0f));
         energy_player_two->translate(vec3(-3.0f, 0.0f, 0.0f));
       }
+      
       void reset_UI(){
         update_lifes(100, 100);
 

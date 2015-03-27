@@ -141,7 +141,6 @@ namespace octet{
         reset_n_gram();
       }
 
-
       PredictiveAI(std::size_t n_dimension_nGram) : dimension_nGram(n_dimension_nGram), treshold(6){
         reset_n_gram();
       }
@@ -197,7 +196,6 @@ namespace octet{
         ++oneGram[input];
         cur_sequence.set_size(temp_size);
       }
-
 
       int get_last(){
         return cur_sequence.get_element(0);
@@ -278,7 +276,6 @@ namespace octet{
         cur_sequence.set_size(temp_size);
         return prediction;
       }
-
     };
 
   }

@@ -53,7 +53,7 @@ namespace octet{
 
       void ouch(height level, Puppet& enemy){
         energy += 2;
-        life -= life_damage*enemy.get_energy()*0.01f;
+        life -= static_cast<int> (life_damage*enemy.get_energy()*0.01f);
         puppet_instance->set_material(materials[10 + ((level == HEIGHT_UP) ? 0 : 1)]);
       }
 
@@ -605,7 +605,6 @@ namespace octet{
       actions get_action(){
         return next_action;
       }
-
     };
   }
 }
