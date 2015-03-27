@@ -486,6 +486,8 @@ namespace octet {
             steps = 2;
             _game_state = _GAME_OVER;
           }
+          //predictiveAI.print_nGrams(true);
+          //predictiveAI_one.print_nGrams();
         }
 
         //Resolve actions

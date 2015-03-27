@@ -98,6 +98,16 @@ namespace octet{
           printf("\n");
         }
 
+        void print_sequence() const {
+          for (int i = 0; i < size; ++i){
+            //Obtain position in the array
+            int pos = top - 1 - i;
+            if (pos < 0)
+              pos = _SIZE_SEQUENCE + pos;
+            printf("%i-", sequence[pos]);
+          }
+        }
+        
         /// @brief This is a debug printer, that will print the whole sequence and the top position
         void print_debug_all(){
           printf("Sequence: top %i and size %i\n", top, size);
@@ -325,8 +335,32 @@ namespace octet{
 
       /// @brief This is used to print all the current information of the ngram
       /// This method will ignore the 'sum' of the (n-1)gram values!
-      void print_nGrams(){
-
+      void print_nGrams(bool all_n_gram = false){
+        printf("Printing..................\n");
+        for (int i = 0; i != 9; ++i){
+          printf("%i\n", oneGram[i]);
+        }
+        printf("\n");
+        printf("\n");
+        if (all_n_gram)
+          for (int i = 2; i != 5; ++i){
+            std::unordered_map<SequenceInput, unsigned int, MyHash<SequenceInput>>::iterator iterator_nGram = nGram.begin();
+            while (iterator_nGram != nGram.end()){
+              if (iterator_nGram->first.get_size() == i){
+                iterator_nGram->first.print_sequence();
+                printf(" ,%i\n", iterator_nGram->second);
+              }
+              ++iterator_nGram;
+            }
+            printf("\n");
+            printf("\n");
+          }
+        printf("\n");
+        printf("\n");
+        printf("\n");
+        printf("\n");
+        printf("\n");
+        printf("\n");
       }
     };
 

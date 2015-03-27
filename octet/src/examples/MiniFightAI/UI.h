@@ -46,7 +46,8 @@ namespace octet {
     public:
       ///@brief Default constructor
       StageUI(){}
-
+      
+      ///@brief To initialize the whole user interface, to only be called once!
       void init(ref<visual_scene> n_game_scene){
         posx[0] = 5.99f;
         posy[0] = -7.12f;
@@ -197,6 +198,7 @@ namespace octet {
         game_scene->add_mesh_instance(new mesh_instance(button_on[10], button_box, button_mat));
       }
 
+      ///@brief This will aniamte the intro with a t (0..1) value! 
       void animate_intro(float t){
         t = t*t;
         courtin->access_nodeToParent().loadIdentity();
@@ -209,6 +211,7 @@ namespace octet {
         }
       }
 
+      ///@brief This is used
       void update_lifes(int life1, int life2){
         if (life1 <= 40)
           mesh_player_one->set_material(purple);
